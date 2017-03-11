@@ -1,0 +1,125 @@
+; #= ppac -rs
+; ########################################
+; Peace and Protection
+; ########################################
+
+#.ppa.info off
+[addon]
+name=Alias Central
+popup=Alias Central
+author=kapot
+version=1.1
+id=ppac
+ppver=4.22
+[files]
+1=ac.ppa
+[notes]
+1=This addon adds the ability to index PnP aliases in $script(0) and $alias(0)
+[menu]
+1=Show:{ ppac }
+#.ppa.info end
+
+on *:LOAD:{
+  ; PnP check
+  if (!$_ispnp) {
+    echo 4 -ati2 *** This addon requires Peace and Protection by pai to use.
+    echo 4 -ati2 *** You can download Peace and Protection at http://www.kristshell.net/pnp/
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    halt
+  }
+  ; Invalid load method check
+  if (!$istok($_cfgx(addons,ids),$readini($script,n,addon,id),32)) {
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    dispa Unloading ' $+ $script $+ ' $chr(40) $+ addon is not properly loaded; use /addon to load it $+ $chr(41)
+    halt
+  }
+}
+
+dialog ppac {
+  title "Alias Central"
+  size -1 -1 276 267
+  option dbu
+  icon script\pnp.icon
+
+  box "", 1, 5 5 160 100
+  list 2, 15 15 100 80, size sort
+
+  box "", 3, 170 5 100 100
+  list 4, 180 15 80 80, size sort
+
+  box "Alias", 5, 5 110 265 150
+  edit "", 6, 15 120 248 133, multi read hsbar vsbar
+
+  button "Clipboard", 7, 120 15 37 15
+  button "Reindex", 8, 120 80 37 15
+  button "Go To", 9,120 35 37 15, hide
+}
+
+alias ppac { _dialog -am ppac ppac }
+
+alias -l ppac.scan {
+
+  hmake pnp.ac.index 100
+
+  var %num = $alias(0)
+  while (%num > 0) {
+
+    var %afile = $alias(%num)
+    if ($dialog(ppac)) { dialog -t ppac Please wait...scanning $remove(%afile,$mircdir) }
+
+    hmake pnp.ac.scanfile 100
+    hload -n pnp.ac.scanfile $alias(%num)
+
+    var %x = 1,%i = $hget(pnp.ac.scanfile,0).item
+    while (%x <= %i) {
+
+      tokenize 32 $hget(pnp.ac.scanfile,%x)
+      if (($1) && ($left($1,1) != ;)) { 
+
+        if ($isalias($1)) { 
+          if ($hget(pnp.ac.index,$1)) { hadd pnp.ac.index $1 $addtok($hget(pnp.ac.index,$1),%x $+ $chr(44) $+ %afile,127) }
+          else { hadd pnp.ac.index $1 %x $+ $chr(44) $+ %afile }
+
+          var %numleft = 0, %numright = 0
+          :loop
+          if (%x > %i) { break }
+          if ($chr(123) isin $hget(pnp.ac.scanfile,%x)) { inc %numleft }
+          if ($chr(125) isin $hget(pnp.ac.scanfile,%x)) { inc %numright }
+          if (%numleft > %numright) { inc %x | goto loop }
+        }
+      }
+      inc %x
+    }
+    hfree pnp.ac.scanfile
+    dec %num
+  }
+
+  ;Scan script files, similar but slightly different
+  var %num = $script(0)
+  while (%num > 0) {
+
+    var %sfile = $script(%num)
+    if ($dialog(ppac)) { dialog -t ppac Please wait...scanning $remove(%sfile,$mircdir) }
+
+    hmake pnp.ac.scanfile 100
+    hload -n pnp.ac.scanfile %sfile
+
+    var %i = $hfind(pnp.ac.scanfile,alias*,0,w).data
+    while (%i > 0) {
+      var %item = $hfind(pnp.ac.scanfile,alias*,%i,w).data
+      tokenize 32 $hget(pnp.ac.scanfile,%item)
+      var %alias = $iif($2 == -l,$3,$2)
+      if ($hget(pnp.ac.index,%alias)) { hadd pnp.ac.index %alias $addtok($hget(pnp.ac.index,%alias),%item $+ $chr(44) $+ %sfile,127) }
+      else { hadd pnp.ac.index %alias %item $+ $chr(44) $+ %sfile }
+      dec %i
+    }
+    hfree pnp.ac.scanfile
+    dec %num
+  }
+  dialog -t $dname Alias Central
+
+}
+on *:DIALOG:ppac:init:0:{ 
+  if (!$hget(pnp.ac.index)) { ppac.scan }
+  ppac.dupdate
+}
