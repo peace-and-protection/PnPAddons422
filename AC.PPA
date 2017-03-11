@@ -1,16 +1,21 @@
 ; #= ppac -rs
 ; ########################################
 ; Peace and Protection
+; PnP Alias Central (dev addon)
 ; ########################################
 
 #.ppa.info off
 [addon]
 name=Alias Central
+group=Dev
 popup=Alias Central
 author=kapot
 version=1.1
+url=
+email=
 id=ppac
 ppver=4.22
+unload=ppac.unload
 [files]
 1=ac.ppa
 [notes]
@@ -122,4 +127,86 @@ alias -l ppac.scan {
 on *:DIALOG:ppac:init:0:{ 
   if (!$hget(pnp.ac.index)) { ppac.scan }
   ppac.dupdate
+}
+on *:DIALOG:ppac:sclick:*:{
+  if ($did == 4) { did -c $dname 2 $didwm($dname,2,$did(4).seltext) | goto 2 }
+  if ($istok(2 7 8 9,$did,32)) { goto $did }
+
+  :2
+  did -r $dname 5,6
+  var %found = $numtok($hget(pnp.ac.index,$did(2).seltext),127)
+
+  did -a $dname 5 Alias - Found: %found instance(s)
+  var %tok = 1
+  while ($gettok($hget(pnp.ac.index,$did(2).seltext),%tok,127)) {
+
+    var %line = $gettok($ifmatch,1,44)
+    var %script = $gettok($ifmatch,2,44)
+
+    did -a $dname 6 ; $str(-,40) $+ $crlf
+    did -a $dname 6 ; Line: %line Script : $nopath(%script) $+ $crlf
+    did -a $dname 6 ; $str(-,40) $+ $str($crlf,2)
+
+    if $hget(pnp.ac.script) { hfree pnp.ac.script }
+
+    hmake pnp.ac.script 100  
+    hload -n pnp.ac.script %script
+
+    var %l = %line
+    var %numleft = 0, %numright = 0
+
+    :loop
+    did -a $dname 6 $hget(pnp.ac.script,%l) $+ $crlf
+    if (%l > $hget(pnp.ac.script,0).item) { break }
+    if ($chr(123) isin $hget(pnp.ac.script,%l)) { inc %numleft }
+    if ($chr(125) isin $hget(pnp.ac.script,%l)) { inc %numright }
+
+    if (%numleft > %numright) { inc %l | goto loop }
+    did -a $dname 6 $crlf
+    inc %tok
+  }
+  did -e $dname 7,9
+  return
+
+  :7
+  var %x = 1
+  clipboard
+  while ($isalias($did(2).seltext,%x).alias) { clipboard -an $ifmatch | inc %x }
+  return
+
+  :8
+  ;reindex
+  if ($hget(pnp.ac.index)) { hfree $ifmatch }
+  ppac.scan
+  ppac.dupdate
+  return
+
+  :9
+  var %file = $qt($gettok($gettok($hget(pnp.ac.index,$did(2).seltext),1,127),2,44))
+  var %line = $gettok($gettok($hget(pnp.ac.index,$did(2).seltext),1,127),1,44)
+  .run notepad++.exe %file -n $+ %line
+  return
+}
+
+alias -l ppac.dupdate {
+  did -b $dname 7,9
+  did -r $dname 1-6
+
+  if (($isfile("c:\program files (x86)\notepad++\notepad++.exe")) || ($isfile("c:\program files\notepad++\notepad++.exe"))) { did -v $dname 9 }
+  else { did -h $dname 9 }
+
+  var %x = 1
+  while ($hget(pnp.ac.index,%x).item) {
+    var %alias = $ifmatch
+    if ($numtok($hget(pnp.ac.index,%x).data,127) > 1) { did -a $dname 4 %alias }
+    did -a $dname 2 %alias 
+    inc %x
+  }
+  did -a $dname 1 Aliases( $+ $did(2).lines $+ )
+  did -a $dname 3 Duplicates( $+ $did(4).lines $+ )
+  did -a $dname 5 Alias
+}
+alias ppac.unload {
+  if ($hget(pnp.ac.script)) hfree $ifmatch
+  if ($hget(pnp.ac.index)) hfree $ifmatch
 }
