@@ -1,0 +1,71 @@
+; #= ppascii -rs
+; ########################################
+; Peace and Protection
+; PnP PPASCII (extra addon)
+; ########################################
+
+#.ppa.info off
+[addon]
+name=ASCII
+group=Extras
+popup=ASCII
+author=kapot
+version=1.0
+url=
+email=
+id=ppascii
+ppver=4.22
+[files]
+1=ascii.ppa
+[notes]
+1=Use the /ascii command to view the ASCII table.
+[menu]
+1=View:ascii
+#.ppa.info end
+
+on *:LOAD:{
+  ; PnP check
+  if (!$_ispnp) {
+    echo 4 -ati2 *** This addon requires Peace and Protection by pai to use.
+    echo 4 -ati2 *** You can download Peace and Protection at http://www.kristshell.net/pnp/
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    halt
+  }
+  ; Invalid load method check
+  if (!$istok($_cfgx(addons,ids),$readini($script,n,addon,id),32)) {
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    dispa Unloading ' $+ $script $+ ' $chr(40) $+ addon is not properly loaded; use /addon to load it $+ $chr(41)
+    halt
+  }
+}
+alias ascii {
+  if ($dialog(ppascii)) { dialog -ve ppascii ppascii  }
+  else { dialog -md ppascii ppascii  }
+}
+dialog ppascii {
+  title "ASCII"
+  size -1 -1 285 225
+  option dbu
+  list 1, 5 5 30 215, size
+  list 2, 40 5 30 215, size
+  list 3, 75 5 30 215, size
+  list 4, 110 5 30 215, size
+  list 5, 145 5 30 215, size
+  list 6, 180 5 30 215, size
+  list 7, 215 5 30 215, size
+  list 8, 250 5 30 215, size
+}
+on *:DIALOG:ppascii:init:*: {
+  var %a 1
+  while (%a < 33) {
+    did -a $dname 1 %a - $chr(%a)
+    did -a $dname 2 $calc(%a + 32) - $chr($calc(%a + 32))
+    did -a $dname 3 $calc(%a + 64) - $chr($calc(%a + 64))
+    did -a $dname 4 $calc(%a + 96) - $chr($calc(%a + 96))
+    did -a $dname 5 $calc(%a + 128) - $chr($calc(%a + 128))
+    did -a $dname 6 $calc(%a + 160) - $chr($calc(%a + 160))
+    did -a $dname 7 $calc(%a + 192) - $chr($calc(%a + 192))
+    did -a $dname 8 $calc(%a + 224) - $chr($calc(%a + 224))
+    inc %a
+  }
+}
