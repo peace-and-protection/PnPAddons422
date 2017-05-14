@@ -1,0 +1,79 @@
+; #= pphash -rs
+; ########################################
+; Peace and Protection
+; Hash Table Viewer (standard addon)
+; ########################################
+
+#.ppa.info off
+[addon]
+name=Hash Table Viewer
+group=Core
+popup=Hash Table Viewer
+author=acvxqs
+version=1.00
+url=http://www.kristshell.net/pnp/
+email=
+id=pphash
+ppver=4.22
+[files]
+1=hash.ppa
+[notes]
+1=A simple Hash Table Viewer for PnP.
+[menu]
+1=View:_dialog -m pphash pphash
+#.ppa.info end
+
+on *:LOAD:{
+  ; PnP check
+  if (!$_ispnp) {
+    echo 4 -ati2 *** This addon requires Peace and Protection by pai to use.
+    echo 4 -ati2 *** You can download Peace and Protection at http://www.kristshell.net/pnp/
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    halt
+  }
+  ; Invalid load method check
+  if (!$istok($_cfgx(addons,ids),$readini($script,n,addon,id),32)) {
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    dispa Unloading ' $+ $script $+ ' $chr(40) $+ addon is not properly loaded; use /addon to load it $+ $chr(41)
+    halt
+  }
+}
+dialog pphash {
+  title "Hash Table Viewer"
+  size -1 -1 216 177
+  icon script\pnp.ico
+  option dbu
+
+  box "Table(s)", 1, 5 5 100 100
+  box "Item(s)", 2, 110 5 100 100
+  box "Data", 3, 5 110 205 60
+  combo 4, 15 15 80 80, sort size edit
+  list 5, 120 15 80 80, sort size
+  edit "", 6, 15 120 185 40, multi
+}
+
+on *:DIALOG:pphash:init:0:{ pphash_get_ht }
+on *:DIALOG:pphash:sclick:4:{ pphash_get_hi }
+on *:DIALOG:pphash:sclick:5:{ pphash_get_hd }
+on *:DIALOG:pphash:edit:4:{ if ($hget($did(4))) { pphash_get_hi } }
+alias pphash_get_ht {
+  did -r pphash 4-6
+  var %num = $hget(0)
+  while (%num > 0) {
+    did -a $dname 4 $hget(%num)
+    dec %num
+  }
+}
+
+alias pphash_get_hi {
+  did -r pphash 5-6
+  var %num = $hget($did(4),0).item
+  while (%num > 0) {
+    did -a $dname 5 $hget($did(4),%num).item
+    dec %num
+  }
+}
+
+alias pphash_get_hd {
+  did -ra $dname 6 $hget($did(4),$did(5).seltext)  
+}
