@@ -1,0 +1,113 @@
+; #= ppsysinfo -rs
+; ########################################
+; Peace and Protection
+; PnP SysInfo (standard addon)
+; ########################################
+
+#.ppa.info off
+[addon]
+name=SysInfo
+group=Extras
+popup=SysInfo
+author=acvxqs
+version=1.0
+url=
+email=
+id=ppsysinfo
+ppver=4.22
+config=
+help=
+unload=
+vars=
+vars2=
+windows=
+dialogs=
+timers=
+sockets=
+hashcid=
+hashpnp=
+[files]
+1=sysinfo.ppa
+[other]
+1=
+[notes]
+1=This addon displays various system information. Use /ppsysinfo to run.
+[menu]
+1=
+[query]
+1=
+[channel]
+1=
+#.ppa.info end
+
+on *:LOAD:{
+  ; PnP check
+  if (!$_ispnp) {
+    echo 4 -ati2 *** This addon requires Peace and Protection by pai to use.
+    echo 4 -ati2 *** You can download Peace and Protection at http://www.kristshell.net/pnp/
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    halt
+  }
+  ; Invalid load method check
+  if (!$istok($_cfgx(addons,ids),$readini($script,n,addon,id),32)) {
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    dispa Unloading ' $+ $script $+ ' $chr(40) $+ addon is not properly loaded; use /addon to load it $+ $chr(41)
+    halt
+  }
+}
+alias ppsysinfo {
+  var %t = 1
+  var %todo = Processor,BaseBoard,PhysicalMemory,LogicalDisk,DiskDrive,VideoController,SoundDevice,NetworkAdapter,Printer,Battery,OperatingSystem
+
+  var %Processor = Caption,Manufacturer,CurrentClockSpeed,ExtClock,L2CacheSize,AddressWidth,SocketDesignation,ProcessorId,LoadPercentage
+  var %BaseBoard = Manufacturer,Product,Version
+  var %PhysicalMemory = Name,Capacity,BankLabel,FormFactor,MemoryType
+  var %LogicalDisk = Name,Description,FileSystem,VolumeName,Size,VolumeSerialNumber,SystemName
+  var %DiskDrive = Model,MediaType,Size,Partitions,InterfaceType,TotalSectors,BytesPerSector,TotalTracks,SectorsPerTrack,TotalCylinders,TracksPerCylinder,TotalHeads
+  var %VideoController = Caption,VideoProcessor,AdapterRAM,VideoMemoryType,VideoArchitecture,AdapterDACType,CurrentHorizontalResolution,CurrentVerticalResolution,CurrentBitsPerPixel,CurrentRefreshRate,CurrentScanMode,InstalledDisplayDrivers,DriverVersion,DriverDate
+  var %SoundDevice = Caption,Manufacturer,DeviceID
+  var %NetworkAdapter = Description,Manufacturer,MACAddress,ServiceName,TimeOfLastReset
+  var %Printer = Caption,PortName,PrinterStatus,HorizontalResolution,VerticalResolution,PrintProcessor
+  var %Battery = Caption,DeviceID,EstimatedRunTime,EstimatedChargeRemaining
+  var %OperatingSystem = Caption,OSArchitecture,Version,ServicePackMajorVersion,BuildNumber,BuildType,NumberOfProcesses,FreePhysicalMemory,FreeVirtualMemory,TotalVirtualMemorySize,InstallDate,BootDevice,RegisteredUser
+
+  var %win = @SysInfo
+
+  if ($window(%win)) window -c %win
+  _window 2.2 -hnlkv -t40,120 %win -1 -1 -1 -1 %win
+  iline %win 1 Systeminformation
+
+  while ($gettok(%todo,%t,44)) {
+    var %do = $ifmatch
+    var %win32 = Win32_ $+ %do
+    .comopen Locator WbemScripting.SWbemLocator
+    noop $com(Locator,ConnectServer,3, dispatch* Services)
+    .comclose Locator
+    noop $com(Services, InstancesOf,3,string,%win32,dispatch* Instances)
+    .comclose Services
+    noop $com(Instances,Count,3)
+
+    aline %win %do $+ $chr(9) $+ Information $+ $chr(9) $+ Value
+
+    var %n = $com(Instances).result
+    var %m = 1
+
+    while (%m <= %n) {
+
+      var %item = $eval(% $+ %do,2)
+      var %num = $numtok(%item,44)
+      var %x = 1
+
+      aline %win %do %m
+
+      while (%x <= %num) {
+        aline %win $chr(9) $+ $gettok(%item,%x,44) $+ $chr(9) $+ $comval(Instances, %m, $gettok(%item,%x,44))
+        inc %x
+      }
+      inc %m
+    }
+    .comclose Instances
+    inc %t    	
+  }
+  window -a %win
+}
