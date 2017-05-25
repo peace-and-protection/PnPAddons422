@@ -73,13 +73,17 @@ alias ppsysinfo {
 
   var %win = @SysInfo
 
+  _progress.1 Connecting to WMI (COM)...
+
   if ($window(%win)) window -c %win
   _window 2.2 -hnlkv -t40,120 %win -1 -1 -1 -1 %win
   iline %win 1 Systeminformation
 
+
   while ($gettok(%todo,%t,44)) {
     var %do = $ifmatch
     var %win32 = Win32_ $+ %do
+    _progress.2 $int($calc(%t / $numtok(%todo,44) * 100)) Querying %win32
     .comopen Locator WbemScripting.SWbemLocator
     noop $com(Locator,ConnectServer,3, dispatch* Services)
     .comclose Locator
@@ -101,7 +105,10 @@ alias ppsysinfo {
       aline %win %do %m
 
       while (%x <= %num) {
-        aline %win $chr(9) $+ $gettok(%item,%x,44) $+ $chr(9) $+ $comval(Instances, %m, $gettok(%item,%x,44))
+        var %information = $gettok(%item,%x,44)
+        if ($istok(Capacity Size AdapterRAM,%information,32)) aline %win $chr(9) $+ %information $+ $chr(9) $+ $bytes($comval(Instances, %m, %information)).suf
+        elseif ($istok(FreePhysicalMemory FreeVirtualMemory TotalVirtualMemorySize,%information,32)) aline %win $chr(9) $+ %information $+ $chr(9) $+ $bytes($calc($comval(Instances, %m, %information) * 1024)).suf
+        else aline %win $chr(9) $+ %information $+ $chr(9) $+ $comval(Instances, %m, %information)
         inc %x
       }
       inc %m
