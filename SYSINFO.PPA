@@ -1,7 +1,7 @@
 ; #= ppsysinfo -rs
 ; ########################################
 ; Peace and Protection
-; PnP SysInfo (standard addon)
+; PnP SysInfo (extras addon)
 ; ########################################
 
 #.ppa.info off
@@ -9,7 +9,7 @@
 name=SysInfo
 group=Extras
 popup=SysInfo
-author=acvxqs
+author=kapot
 version=1.0
 url=
 email=

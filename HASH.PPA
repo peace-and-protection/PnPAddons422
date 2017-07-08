@@ -1,17 +1,17 @@
 ; #= pphash -rs
 ; ########################################
 ; Peace and Protection
-; Hash Table Viewer (standard addon)
+; Hash Table Viewer (extras addon)
 ; ########################################
 
 #.ppa.info off
 [addon]
 name=Hash Table Viewer
-group=Core
+group=Extras
 popup=Hash Table Viewer
-author=acvxqs
+author=kapot
 version=1.00
-url=http://www.kristshell.net/pnp/
+url=
 email=
 id=pphash
 ppver=4.22
