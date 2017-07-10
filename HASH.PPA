@@ -50,15 +50,18 @@ dialog pphash {
   combo 4, 15 15 80 80, sort size edit
   list 5, 120 15 80 80, sort size
   edit "", 6, 15 120 185 40, multi
+  menu "&?", 10
+  item "&Refresh", 11, 10
 }
 
 on *:DIALOG:pphash:init:0:{ pphash_get_ht }
 on *:DIALOG:pphash:sclick:4:{ pphash_get_hi }
 on *:DIALOG:pphash:sclick:5:{ pphash_get_hd }
+on *:DIALOG:pphash:menu:11:{ pphash_get_ht }
 on *:DIALOG:pphash:edit:4:{ if ($hget($did(4))) { pphash_get_hi } }
 alias pphash_get_ht {
   did -r pphash 4-6
-  var %num = $hget(0)
+  var %num $hget(0)
   while (%num > 0) {
     did -a $dname 4 $hget(%num)
     dec %num
@@ -67,7 +70,7 @@ alias pphash_get_ht {
 
 alias pphash_get_hi {
   did -r pphash 5-6
-  var %num = $hget($did(4),0).item
+  var %num $hget($did(4),0).item
   while (%num > 0) {
     did -a $dname 5 $hget($did(4),%num).item
     dec %num
