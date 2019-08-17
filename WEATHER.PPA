@@ -10,8 +10,8 @@ name=Weather
 group=Tutorial
 popup=Weather
 author=acvxqs
-version=1.00
-url=
+version=1.01
+url=https://github.com/acvxqs/PnPAddons422
 email=
 id=ppweather
 ppver=4.22
@@ -47,6 +47,7 @@ on *:LOAD:{
     dispa Unloading ' $+ $script $+ ' $chr(40) $+ addon is not properly loaded; use /addon to load it $+ $chr(41)
     halt
   }
+  getJFM
 }
 dialog weather {
   title "Weather Central"
@@ -127,7 +128,7 @@ on *:DIALOG:weather:init:0:{
       }
       inc %n
     }
-    ; well we have to load ntworks if they exist!
+    ; well we have to load networks if they exist!
     didtok $dname 2 44 %anetworks
   }
 }
@@ -422,7 +423,7 @@ alias -l weather.load {
 alias weather.unload {
   jsonclose -w PPWEATHER.*
   weather.save 1
-  if (!$input(Would you like to keep weather data?,yq)) .remove $_cfg(weather.dat)
+  if (!$_yesno(1,Would you like to keep weather configuration data?)) .remove $_cfg(weather.dat)
 }
 alias -l weather.save {
   var %file $_cfg(weather.dat)
@@ -457,7 +458,7 @@ alias weather.owm {
   :kstring | return kelvin
 }
 on *:START:{ _startup.add _weather.start Initializing weather addon }
-on *:EXIT:{ weather.save }
+on *:EXIT:{ weather.save | jsonclose -w PPWEATHER.* }
 alias _weather.start { weather.setup }
 ; `weather varname [value]
 ; varname should not include the %`
@@ -475,13 +476,8 @@ alias `weather {
   }
 }
 alias _`weather hadd pnp.config $1 $read(config\ $+ $hget(pnp,user) $+ \weather.dat,nts,$1)
-
-;/weather London,uk
-;/weather New York,us
-;/weather -m Amsterdam,nl
-;/weather -i Los Angeles,us
-;/weather -k Tokyo,jp
 alias weather {
+  var %caller $caller
   if ($isid) return
 
   var %switch,%rest
@@ -490,8 +486,8 @@ alias weather {
     %rest = $2-
   }
   else {
-    if ($caller == editbox) %switch = m
-    elseif ($caller == event) {
+    if (%caller == editbox) %switch = m
+    elseif (%caller == event) {
 
       if ($istok($hget(pnp.weather,anetworks),$network,44)) {
         var %netopt $hget(pnp.weather,$+(anet-,$network,-opt))
@@ -535,245 +531,23 @@ alias weather {
     var %pattern /^[%20a-z]{2,}$/i
 
     if (($regex(%city,%pattern)) && ($regex(%cc,/^[a-z]{2}$/i))) {
-      var %jsonname $lower($+(PPWEATHER.,%city,.,%cc,.,%switch))
+      var -s %jsonname $lower($+(PPWEATHER.,%city,.,%cc,.,%switch))
       if (!$JSON(%jsonname)) {
-        var %page $+($hget(pnp.config,weather.apiurl),$hget(pnp.config,weather.pchar))
-        %page = $+(%page,$hget(pnp.config,weather.qstring),%city,$chr(44),%cc)
-        %page = $+(%page,%units))
-        %page = $+(%page,$hget(pnp.config,weather.astring),$hget(pnp.config,weather.apikey))    
-        JSONOPEN -u %jsonname %page
-        if ($json(%jsonname).httpStatus == 200) {
-          if ($caller == editbox) dispa [Weather] $regsubex($json(%jsonname).string,/(\d)/g,$:t(\1)))
-          elseif ($caller == event) { 
-            var %city $json(%jsonname,name).value
-            var %cc $json(%jsonname,sys,country).value
-            var %short $json(%jsonname,weather,0,main).value
-            var %long $json(%jsonname,weather,0,description).value
-            var %hum $json(%jsonname,main,humidity).value
-            var %temp $json(%jsonname,main,temp).value
-            var %min_temp $json(%jsonname,main,temp_min).value
-            var %max_temp $json(%jsonname,main,temp_max).value
-            var %pressure $json(%jsonname,main,pressure).value
-            var %vis $json(%jsonname,visibility).value
-            var %wspeed $json(%jsonname,wind,speed).value
-            var %wdegree $json(%jsonname,wind,deg).value
-            var %sunrise $json(%jsonname,sys,sunrise).value
-            var %sunset $json(%jsonname,sys,sunset).value
-            var %clouds $json(%jsonname,clouds,all).value            
-            var %result 
-
-            ; respond to network?
-            if ($istok($hget(pnp.weather,anetworks),$network,44)) {
-              ; blacklist channels? If so, respond to all channels!
-              var %netopt $hget(pnp.weather,$+(anet-,$network,-opt))
-              if ($gettok(%netopt,1,44)) {
-                if ($gettok(%netopt,2,44)) {
-                  var %opt $v1
-                  if ($left(%opt,1)) %result = City: %city
-                  if ($mid(%opt,2,1)) %result = %result Country: %cc
-                  if ($mid(%opt,3,1)) %result = %result Weather: %short
-                  if ($mid(%opt,4,1)) %result = %result Description: %long
-                  if ($mid(%opt,5,1)) %result = %result Humidity: %hum
-                  if ($mid(%opt,6,1)) %result = %result Temperature: %temp
-                  if ($mid(%opt,7,1)) %result = %result Min. temp.: %min_temp
-                  if ($mid(%opt,8,1)) %result = %result Max. temp: %max_temp
-                  if ($mid(%opt,9,1)) %result = %result Pressure: %pressure
-                  if ($mid(%opt,10,1)) %result = %result Visibility: %vis
-                  if ($mid(%opt,11,1)) %result = %result Wind speed: %wspeed
-                  if ($mid(%opt,12,1)) %result = %result Wind degree: %wdegree
-                  if ($mid(%opt,13,1)) %result = %result Sunrise: ETA $duration($remove($calc($ctime - %sunrise),-),3)
-                  if ($mid(%opt,14,1)) %result = %result Sunset: ETA $duration($remove($calc($ctime - %sunset),-),3)
-                  if ($mid(%opt,15,1)) %result = %result Clouds: %clouds
-                }
-              }
-              ; whitelist channels?
-              ; check if channel is in the list and if it is
-              ; check its options
-              elseif ($istok($hget(pnp.weather,$+(anet-,$network,-channels)),$chan,44)) {
-                var %opt $hget(pnp.weather,$+(achan-,$network,-,$chan))
-                if ($left(%opt,1)) %result = City: %city
-                if ($mid(%opt,2,1)) %result = %result Country: %cc
-                if ($mid(%opt,3,1)) %result = %result Weather: %short
-                if ($mid(%opt,4,1)) %result = %result Description: %long
-                if ($mid(%opt,5,1)) %result = %result Humidity: %hum
-                if ($mid(%opt,6,1)) %result = %result Temperature: %temp
-                if ($mid(%opt,7,1)) %result = %result Min. temp.: %min_temp
-                if ($mid(%opt,8,1)) %result = %result Max. temp: %max_temp
-                if ($mid(%opt,9,1)) %result = %result Pressure: %pressure
-                if ($mid(%opt,10,1)) %result = %result Visibility: %vis
-                if ($mid(%opt,11,1)) %result = %result Wind speed: %wspeed
-                if ($mid(%opt,12,1)) %result = %result Wind degree: %wdegree
-                if ($mid(%opt,13,1)) %result = %result Sunrise: ETA $duration($remove($calc($ctime - %sunrise),-),3)
-                if ($mid(%opt,14,1)) %result = %result Sunset: ETA $duration($remove($calc($ctime - %sunset),-),3)
-                if ($mid(%opt,15,1)) %result = %result Clouds: %clouds
-              }  
-            }
-            if (%result) msg $chan [Weather] %result
-            else msg $chan [Weather] No configuration!
-          }
-        }
-        elseif ($json(%jsonname).string) {
-          if ($caller == editbox) dispa Weather: $json(%jsonname).string
-          elseif ($caller == event) [Weather] $json(%jsonname).string
-        }
-        else dispa Weather: $json(%jsonname).httpStatus - $json(%jsonname).httpStatusText
+        weatherfetch %caller %jsonname %city %cc %units
       }
       else {
         var %dt $json(%jsonname,dt).value
         if ((!%dt) || ($calc($ctime - %dt) >= 600)) { 
           JSONCLOSE %jsonname 
-
-          var %page $+($hget(pnp.config,weather.apiurl),$hget(pnp.config,weather.pchar))
-          %page = $+(%page,$hget(pnp.config,weather.qstring),%city,$chr(44),%cc)
-          %page = $+(%page,%units))
-          %page = $+(%page,$hget(pnp.config,weather.astring),$hget(pnp.config,weather.apikey))    
-          JSONOPEN -u %jsonname %page
-          if ($json(%jsonname).httpStatus == 200) {
-            if ($caller == editbox) dispa [Weather] $regsubex($json(%jsonname).string,/(\d)/g,$:t(\1)))
-            elseif ($caller == event) { 
-              var %city $json(%jsonname,name).value
-              var %cc $json(%jsonname,sys,country).value
-              var %short $json(%jsonname,weather,0,main).value
-              var %long $json(%jsonname,weather,0,description).value
-              var %hum $json(%jsonname,main,humidity).value
-              var %temp $json(%jsonname,main,temp).value
-              var %min_temp $json(%jsonname,main,temp_min).value
-              var %max_temp $json(%jsonname,main,temp_max).value
-              var %pressure $json(%jsonname,main,pressure).value
-              var %vis $json(%jsonname,visibility).value
-              var %wspeed $json(%jsonname,wind,speed).value
-              var %wdegree $json(%jsonname,wind,deg).value
-              var %sunrise $json(%jsonname,sys,sunrise).value
-              var %sunset $json(%jsonname,sys,sunset).value
-              var %clouds $json(%jsonname,clouds,all).value            
-              var %result 
-
-              ; respond to network?
-              if ($istok($hget(pnp.weather,anetworks),$network,44)) {
-                ; blacklist channels? If so, respond to all channels!
-                var %netopt $hget(pnp.weather,$+(anet-,$network,-opt))
-                if ($gettok(%netopt,1,44)) {
-                  if ($gettok(%netopt,2,44)) {
-                    var %opt $v1
-                    if ($left(%opt,1)) %result = City: %city
-                    if ($mid(%opt,2,1)) %result = %result Country: %cc
-                    if ($mid(%opt,3,1)) %result = %result Weather: %short
-                    if ($mid(%opt,4,1)) %result = %result Description: %long
-                    if ($mid(%opt,5,1)) %result = %result Humidity: %hum
-                    if ($mid(%opt,6,1)) %result = %result Temperature: %temp
-                    if ($mid(%opt,7,1)) %result = %result Min. temp.: %min_temp
-                    if ($mid(%opt,8,1)) %result = %result Max. temp: %max_temp
-                    if ($mid(%opt,9,1)) %result = %result Pressure: %pressure
-                    if ($mid(%opt,10,1)) %result = %result Visibility: %vis
-                    if ($mid(%opt,11,1)) %result = %result Wind speed: %wspeed
-                    if ($mid(%opt,12,1)) %result = %result Wind degree: %wdegree
-                    if ($mid(%opt,13,1)) %result = %result Sunrise: ETA $duration($remove($calc($ctime - %sunrise),-),3)
-                    if ($mid(%opt,14,1)) %result = %result Sunset: ETA $duration($remove($calc($ctime - %sunset),-),3)
-                    if ($mid(%opt,15,1)) %result = %result Clouds: %clouds
-                  }
-                }
-                ; whitelist channels?
-                ; check if channel is in the list and if it is
-                ; check its options
-                elseif ($istok($hget(pnp.weather,$+(anet-,$network,-channels)),$chan,44)) {
-                  var %opt $hget(pnp.weather,$+(achan-,$network,-,$chan))
-                  if ($left(%opt,1)) %result = City: %city
-                  if ($mid(%opt,2,1)) %result = %result Country: %cc
-                  if ($mid(%opt,3,1)) %result = %result Weather: %short
-                  if ($mid(%opt,4,1)) %result = %result Description: %long
-                  if ($mid(%opt,5,1)) %result = %result Humidity: %hum
-                  if ($mid(%opt,6,1)) %result = %result Temperature: %temp
-                  if ($mid(%opt,7,1)) %result = %result Min. temp.: %min_temp
-                  if ($mid(%opt,8,1)) %result = %result Max. temp: %max_temp
-                  if ($mid(%opt,9,1)) %result = %result Pressure: %pressure
-                  if ($mid(%opt,10,1)) %result = %result Visibility: %vis
-                  if ($mid(%opt,11,1)) %result = %result Wind speed: %wspeed
-                  if ($mid(%opt,12,1)) %result = %result Wind degree: %wdegree
-                  if ($mid(%opt,13,1)) %result = %result Sunrise: ETA $duration($remove($calc($ctime - %sunrise),-),3)
-                  if ($mid(%opt,14,1)) %result = %result Sunset: ETA $duration($remove($calc($ctime - %sunset),-),3)
-                  if ($mid(%opt,15,1)) %result = %result Clouds: %clouds
-                }  
-              }
-              if (%result) msg $chan [Weather] %result
-              else msg $chan [Weather] No configuration!
-            }
-          }
-          elseif ($json(%jsonname).string) {
-            if ($caller == editbox) dispa Weather: $json(%jsonname).string
-            elseif ($caller == event) [Weather] $json(%jsonname).string
-          }
-          else dispa Weather: $json(%jsonname).httpStatus - $json(%jsonname).httpStatusText
-
+          weatherfetch %caller %jsonname %city %cc %units
         }
         else {
-          if ($caller == editbox) dispa [Weather] (cached) $regsubex($json(%jsonname).string,/(\d)/g,$:t(\1)))
-          elseif ($caller == event) { 
-            var %city $json(%jsonname,name).value
-            var %cc $json(%jsonname,sys,country).value
-            var %short $json(%jsonname,weather,0,main).value
-            var %long $json(%jsonname,weather,0,description).value
-            var %hum $json(%jsonname,main,humidity).value
-            var %temp $json(%jsonname,main,temp).value
-            var %min_temp $json(%jsonname,main,temp_min).value
-            var %max_temp $json(%jsonname,main,temp_max).value
-            var %pressure $json(%jsonname,main,pressure).value
-            var %vis $json(%jsonname,visibility).value
-            var %wspeed $json(%jsonname,wind,speed).value
-            var %wdegree $json(%jsonname,wind,deg).value
-            var %sunrise $json(%jsonname,sys,sunrise).value
-            var %sunset $json(%jsonname,sys,sunset).value
-            var %clouds $json(%jsonname,clouds,all).value            
-            var %result 
-
-            ; respond to network?
-            if ($istok($hget(pnp.weather,anetworks),$network,44)) {
-              ; blacklist channels? If so, respond to all channels!
-              var %netopt $hget(pnp.weather,$+(anet-,$network,-opt))
-              if ($gettok(%netopt,1,44)) {
-                if ($gettok(%netopt,2,44)) {
-                  var %opt $v1
-                  if ($left(%opt,1)) %result = City: %city
-                  if ($mid(%opt,2,1)) %result = %result Country: %cc
-                  if ($mid(%opt,3,1)) %result = %result Weather: %short
-                  if ($mid(%opt,4,1)) %result = %result Description: %long
-                  if ($mid(%opt,5,1)) %result = %result Humidity: %hum
-                  if ($mid(%opt,6,1)) %result = %result Temperature: %temp
-                  if ($mid(%opt,7,1)) %result = %result Min. temp.: %min_temp
-                  if ($mid(%opt,8,1)) %result = %result Max. temp: %max_temp
-                  if ($mid(%opt,9,1)) %result = %result Pressure: %pressure
-                  if ($mid(%opt,10,1)) %result = %result Visibility: %vis
-                  if ($mid(%opt,11,1)) %result = %result Wind speed: %wspeed
-                  if ($mid(%opt,12,1)) %result = %result Wind degree: %wdegree
-                  if ($mid(%opt,13,1)) %result = %result Sunrise: ETA $duration($remove($calc($ctime - %sunrise),-),3)
-                  if ($mid(%opt,14,1)) %result = %result Sunset: ETA $duration($remove($calc($ctime - %sunset),-),3)
-                  if ($mid(%opt,15,1)) %result = %result Clouds: %clouds
-                }
-              }
-              ; whitelist channels?
-              ; check if channel is in the list and if it is
-              ; check its options
-              elseif ($istok($hget(pnp.weather,$+(anet-,$network,-channels)),$chan,44)) {
-                var %opt $hget(pnp.weather,$+(achan-,$network,-,$chan))
-                if ($left(%opt,1)) %result = City: %city
-                if ($mid(%opt,2,1)) %result = %result Country: %cc
-                if ($mid(%opt,3,1)) %result = %result Weather: %short
-                if ($mid(%opt,4,1)) %result = %result Description: %long
-                if ($mid(%opt,5,1)) %result = %result Humidity: %hum
-                if ($mid(%opt,6,1)) %result = %result Temperature: %temp
-                if ($mid(%opt,7,1)) %result = %result Min. temp.: %min_temp
-                if ($mid(%opt,8,1)) %result = %result Max. temp: %max_temp
-                if ($mid(%opt,9,1)) %result = %result Pressure: %pressure
-                if ($mid(%opt,10,1)) %result = %result Visibility: %vis
-                if ($mid(%opt,11,1)) %result = %result Wind speed: %wspeed
-                if ($mid(%opt,12,1)) %result = %result Wind degree: %wdegree
-                if ($mid(%opt,13,1)) %result = %result Sunrise: ETA $duration($remove($calc($ctime - %sunrise),-),3)
-                if ($mid(%opt,14,1)) %result = %result Sunset: ETA $duration($remove($calc($ctime - %sunset),-),3)
-                if ($mid(%opt,15,1)) %result = %result Clouds: %clouds
-              }  
-            }
-            if (%result) msg $chan [Weather] (cached) %result
+          if (%caller == editbox) dispa [Weather] (cached) $regsubex($json(%jsonname).string,/(\d)/g,$:t(\1)))
+          elseif (%caller == event) {
+            if ($_weatherfetchresult(%jsonname)) msg $chan [Weather] (cached) $v1
             else msg $chan [Weather] (cached) No configuration!
           }
+          else dispa %caller
         }
       }
     }
@@ -781,24 +555,120 @@ alias weather {
   }
   else _dialog -am weather weather 
 }
+
+alias -l _weatherfetchresult {
+  var %jsonname $1 
+
+  ; respond to network?
+  if ($istok($hget(pnp.weather,anetworks),$network,44)) {
+    ; blacklist channels? If so, respond to all channels!
+    var %netopt $hget(pnp.weather,$+(anet-,$network,-opt))
+    if ($gettok(%netopt,1,44)) {
+      if ($gettok(%netopt,2,44)) {
+        var %opt $v1
+        var %result = $_weatherfetchresult2(%jsonname,%opt)
+      }
+    }
+    ; whitelist channels?
+    ; check if channel is in the list and if it is
+    ; check its options
+    elseif ($istok($hget(pnp.weather,$+(anet-,$network,-channels)),$chan,44)) {
+      var %opt $hget(pnp.weather,$+(achan-,$network,-,$chan))
+      %result = $_weatherfetchresult2(%jsonname,%opt)
+    }
+    else %result = $null  
+  }
+  else %result = $null
+
+  return %result
+}
+alias -l _weatherfetchresult2 {
+  var %jsonname $1
+  var %opt $2
+
+  var %city $json(%jsonname,name).value
+  var %cc $json(%jsonname,sys,country).value
+  var %short $json(%jsonname,weather,0,main).value
+  var %long $json(%jsonname,weather,0,description).value
+  var %hum $json(%jsonname,main,humidity).value
+  var %temp $json(%jsonname,main,temp).value
+  var %min_temp $json(%jsonname,main,temp_min).value
+  var %max_temp $json(%jsonname,main,temp_max).value
+  var %pressure $json(%jsonname,main,pressure).value
+  var %vis $json(%jsonname,visibility).value
+  var %wspeed $json(%jsonname,wind,speed).value
+  var %wdegree $json(%jsonname,wind,deg).value
+  var %sunrise $json(%jsonname,sys,sunrise).value
+  var %sunset $json(%jsonname,sys,sunset).value
+  var %clouds $json(%jsonname,clouds,all).value            
+  var %result 
+
+  if ($left(%opt,1)) %result = City: %city
+  if ($mid(%opt,2,1)) %result = %result Country: %cc
+  if ($mid(%opt,3,1)) %result = %result Weather: %short
+  if ($mid(%opt,4,1)) %result = %result Description: %long
+  if ($mid(%opt,5,1)) %result = %result Humidity: %hum
+  if ($mid(%opt,6,1)) %result = %result Temperature: %temp
+  if ($mid(%opt,7,1)) %result = %result Min. temp.: %min_temp
+  if ($mid(%opt,8,1)) %result = %result Max. temp: %max_temp
+  if ($mid(%opt,9,1)) %result = %result Pressure: %pressure
+  if ($mid(%opt,10,1)) %result = %result Visibility: %vis
+  if ($mid(%opt,11,1)) %result = %result Wind speed: %wspeed
+  if ($mid(%opt,12,1)) %result = %result Wind degree: %wdegree
+  if ($mid(%opt,13,1)) %result = %result Sunrise: ETA $duration($remove($calc($ctime - %sunrise),-),3)
+  if ($mid(%opt,14,1)) %result = %result Sunset: ETA $duration($remove($calc($ctime - %sunset),-),3)
+  if ($mid(%opt,15,1)) %result = %result Clouds: %clouds
+
+  return %result
+}
+alias -l weatherfetch {
+  var %caller $1
+  var %jsonname $2
+  var %city $3
+  var %cc $4
+  var %units $5
+  var %page $+($hget(pnp.config,weather.apiurl),$hget(pnp.config,weather.pchar))
+  %page = $+(%page,$hget(pnp.config,weather.qstring),%city,$chr(44),%cc)
+  %page = $+(%page,%units))
+  %page = $+(%page,$hget(pnp.config,weather.astring),$hget(pnp.config,weather.apikey))    
+  JSONOPEN -u %jsonname %page
+  if ($json(%jsonname).httpStatus == 200) {
+    if (%caller == editbox) dispa [Weather] $regsubex($json(%jsonname).string,/(\d)/g,$:t(\1)))
+    elseif (%caller == event) { 
+      if ($_weatherfetchresult(%jsonname)) msg $chan [Weather] $v1
+      else msg $chan [Weather] No configuration!
+    }
+    else dispa %caller
+  }
+  elseif ($json(%jsonname).string) {
+    if (%caller == editbox) dispa Weather: $json(%jsonname).string
+    elseif (%caller == event) [Weather] $json(%jsonname).string
+  }
+  else dispa Weather: $json(%jsonname).httpStatus - $json(%jsonname).httpStatusText
+}
 on $*:TEXT:/^!weather (.+,[a-z]{2})$/iSgm:#:weather $regml(1)
 alias getJFM {
 
   ; sha-512 of JSON For mIRC.mrc v1.0.4000
-  var %sha512 b29de8c964b002d089fa030a9a5357e3c737f17cd16309c0fa82142120a590db2223d4703cafe97f37b65de170bb4d9dbf7bb508f4052a47a2127fc74c10a6d6
+  var %sha512-1 b29de8c964b002d089fa030a9a5357e3c737f17cd16309c0fa82142120a590db2223d4703cafe97f37b65de170bb4d9dbf7bb508f4052a47a2127fc74c10a6d6
+  ; group enabled hash
+  var %sha512-2 183153806705c99fce8fb3003ea7e5522e9f67c40b3e064280ad83111e3d8f92b4cfae106b8827a9d99c2377c32d6d6892fe878a027bcaea24a466450cfeead8
 
   ; check if JSON For mIRC is loaded
   if ($isalias(JSONVersion)) {
+    ; script is loaded, but what version?
     var %file $isalias(JSONVersion).fname
-    if ($sha512(%file,2) != %sha512) .unload -rs $qt(%file) | return $getJFM
+    if (!$istok(%sha512-1 %sha512-2,$sha512(%file,2),32)) {
+      dispa Unloading $JSONVersion ...
+      .unload -rs $qt(%file) | .timer -mio 1 0 getJFM 
+    }
     else return 0
   }
   elseif ($1 isnum) {
     if ($urlget($1).state == fail) { dispa Downloading failed. Are you connected to the internet? | halt }
     elseif ($zip($urlget($1).target,eo,scripts)) { 
-      var %dir $+(scripts\,JSON-For-Mirc-1.0.4000)
-      var %file $qt($findfile(%dir,JSON For mIRC.mrc,1))
-      if (($sha512(%file,2) == %sha512) && ($input(Would you like to load $nopath(%file) $+ ?,yq))) .load -rs %file
+      var %file $qt($findfile(scripts\JSON-For-Mirc-1.0.4000,JSON For mIRC.mrc,1))
+      if ($sha512(%file,2) == %sha512-1) dispa Loading JSON For mIRC ver1.0.4000 | .load -rs %file
       .remove $urlget($1).target
     }
     else { dispa Something went wrong unzipping $:t($urlget($1).target) }
