@@ -10,7 +10,7 @@ name=Weather
 group=Tutorial
 popup=Weather
 author=acvxqs
-version=1.08
+version=1.09
 url=https://github.com/acvxqs/PnPAddons422
 email=
 id=ppweather
@@ -542,9 +542,7 @@ alias weather {
         else {
           if (%caller == editbox) dispa [Weather] (cached) $regsubex($json(%jsonname).string,/(\d)/g,$:t(\1)))
           elseif (%caller == event) {
-            if ($_weatherfetchresult(%jsonname)) msg $chan [Weather] (cached) $v1
-            else msg $chan [Weather] (cached) No configuration!
-          }
+          if ($_weatherfetchresult(%jsonname)) msg $chan [Weather] (cached) $v1          }
         }
       }
     }
@@ -556,16 +554,19 @@ alias weather {
   else _dialog -am weather weather 
 }
 alias -l _weatherfetchresult {
-  var %jsonname $1 
+  var %jsonname $1, %result 
 
   ; respond to network?
   if ($istok($hget(pnp.weather,anetworks),$network,44)) {
     ; blacklist channels? If so, respond to all channels!
     var %netopt $hget(pnp.weather,$+(anet-,$network,-opt))
     if ($gettok(%netopt,1,44)) {
-      if ($gettok(%netopt,2,44)) {
-        var %opt $v1
-        var %result = $_weatherfetchresult2(%jsonname,%opt)
+      ; if channel not blacklisted, then proceed
+      if (!$istok($hget(pnp.weather,$+(anet-,$network,-channels)),$chan,44)) {
+        if ($gettok(%netopt,2,44)) {
+          var %opt $v1
+          %result = $_weatherfetchresult2(%jsonname,%opt)
+        }
       }
     }
     ; whitelist channels?
