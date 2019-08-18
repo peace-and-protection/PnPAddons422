@@ -10,22 +10,16 @@ name=Weather
 group=Tutorial
 popup=Weather
 author=acvxqs
-version=1.05
+version=1.06
 url=https://github.com/acvxqs/PnPAddons422
 email=
 id=ppweather
 ppver=4.22
 config=weather
-help=
 unload=weather.unload
-vars=
 vars2=weather.apiurl weather.apikey weather.pchar weather.qstring weather.ustring weather.astring weather.mstring weather.kstring weather.istring
 windows=
 dialogs=weather
-timers=
-sockets=
-hashcid=
-hashpnp=
 [files]
 1=weather.ppa
 [notes]
@@ -547,15 +541,16 @@ alias weather {
             if ($_weatherfetchresult(%jsonname)) msg $chan [Weather] (cached) $v1
             else msg $chan [Weather] (cached) No configuration!
           }
-          else dispa %caller
         }
       }
     }
-    else dispa Usage: /weather [-m|i|k] {city},{country code}
+    else {
+      if (%caller == editbox) dispa Usage: /weather {-{m|i|k}} {city},{country code}
+      elseif (%caller == event) msg $chan Usage: $hget(pnp.config,weather.trigger ) {-{m|i|k}} {city},{country code} | msg $chan Example: $hget(pnp.config,weather.trigger) -m Vlissingen,nl
+    }
   }
   else _dialog -am weather weather 
 }
-
 alias -l _weatherfetchresult {
   var %jsonname $1 
 
@@ -641,11 +636,11 @@ alias -l weatherfetch {
   }
   elseif ($json(%jsonname).string) {
     if (%caller == editbox) dispa Weather: $json(%jsonname).string
-    elseif (%caller == event) [Weather] $json(%jsonname).string
+    elseif (%caller == event) msg $chan [Weather] $json(%jsonname).string
   }
   else dispa Weather: $json(%jsonname).httpStatus - $json(%jsonname).httpStatusText
 }
-on $*:TEXT:/^!weather( -k| -i| -m)? (.+,[a-z]{2})$/iSgm:#:weather $iif($regml(1),$regml(1) $regml(2),$regml(2))
+on *:TEXT:$($hget(pnp.config,weather.trigger) *):#:weather $2-
 alias getJFM {
 
   ; sha-512 of JSON For mIRC.mrc v1.0.4000
