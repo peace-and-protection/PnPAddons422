@@ -10,7 +10,7 @@ name=Weather
 group=Tutorial
 popup=Weather
 author=acvxqs
-version=1.02
+version=1.03
 url=https://github.com/acvxqs/PnPAddons422
 email=
 id=ppweather
@@ -636,7 +636,6 @@ alias -l weatherfetch {
     if (%caller == editbox) dispa [Weather] $regsubex($json(%jsonname).string,/(\d)/g,$:t(\1)))
     elseif (%caller == event) { 
       if ($_weatherfetchresult(%jsonname)) msg $chan [Weather] $v1
-      else msg $chan [Weather] No configuration!
     }
     else dispa %caller
   }
