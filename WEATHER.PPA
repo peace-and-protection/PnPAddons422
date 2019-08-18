@@ -10,7 +10,7 @@ name=Weather
 group=Tutorial
 popup=Weather
 author=acvxqs
-version=1.03
+version=1.05
 url=https://github.com/acvxqs/PnPAddons422
 email=
 id=ppweather
@@ -531,7 +531,7 @@ alias weather {
     var %pattern /^[%20a-z]{2,}$/i
 
     if (($regex(%city,%pattern)) && ($regex(%cc,/^[a-z]{2}$/i))) {
-      var -s %jsonname $lower($+(PPWEATHER.,%city,.,%cc,.,%switch))
+      var %jsonname $lower($+(PPWEATHER.,%city,.,%cc,.,%switch))
       if (!$JSON(%jsonname)) {
         weatherfetch %caller %jsonname %city %cc %units
       }
@@ -645,7 +645,7 @@ alias -l weatherfetch {
   }
   else dispa Weather: $json(%jsonname).httpStatus - $json(%jsonname).httpStatusText
 }
-on $*:TEXT:/^!weather (.+,[a-z]{2})$/iSgm:#:weather $regml(1)
+on $*:TEXT:/^!weather( -k| -i| -m)? (.+,[a-z]{2})$/iSgm:#:weather $iif($regml(1),$regml(1) $regml(2),$regml(2))
 alias getJFM {
 
   ; sha-512 of JSON For mIRC.mrc v1.0.4000
