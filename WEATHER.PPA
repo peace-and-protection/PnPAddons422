@@ -10,7 +10,7 @@ name=Weather
 group=Tutorial
 popup=Weather
 author=acvxqs
-version=1.10
+version=1.11
 url=https://github.com/acvxqs/PnPAddons422
 email=
 id=ppweather
@@ -39,6 +39,11 @@ on *:LOAD:{
   if (!$istok($_cfgx(addons,ids),$readini($script,n,addon,id),32)) {
     .timer -mio 1 0 .unload -rs " $+ $script $+ "
     dispa Unloading ' $+ $script $+ ' $chr(40) $+ addon is not properly loaded; use /addon to load it $+ $chr(41)
+    halt
+  }
+  if ($version < 7.52) {
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    dispa Unloading ' $+ $script $+ ' $chr(40) $+ This script requires mIRC version 7.52+ $+ $chr(41)    
     halt
   }
   if ($version < 7.56) { 
