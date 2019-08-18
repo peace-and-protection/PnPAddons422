@@ -10,7 +10,7 @@ name=Weather
 group=Tutorial
 popup=Weather
 author=acvxqs
-version=1.07
+version=1.08
 url=https://github.com/acvxqs/PnPAddons422
 email=
 id=ppweather
@@ -41,7 +41,11 @@ on *:LOAD:{
     dispa Unloading ' $+ $script $+ ' $chr(40) $+ addon is not properly loaded; use /addon to load it $+ $chr(41)
     halt
   }
-  getJFM
+  if ($version < 7.56) { 
+    dispa This script requires SReject's JSON For mIRC! 
+    dispa Please get it from: https://github.com/SReject/JSON-For-Mirc/archive/v1.0.4000.zip
+  }
+  else getJFM
 }
 dialog weather {
   title "Weather Central"
@@ -415,7 +419,7 @@ alias -l weather.load {
   if ($isfile(%file)) hload pnp.weather " $+ %file $+ "
 }
 alias weather.unload {
-  jsonclose -w PPWEATHER.*
+  if ($islias(jsonclose)) jsonclose -w PPWEATHER.*
   weather.save 1
   if (!$_yesno(1,Would you like to keep weather configuration data?)) .remove $_cfg(weather.dat)
 }
@@ -451,7 +455,7 @@ alias weather.owm {
   :istring | return imperial
   :kstring | return kelvin
 }
-on *:START:{ _startup.add _weather.start Initializing weather addon }
+on *:START:{ if ($_ispnp) _startup.add _weather.start Initializing weather addon }
 on *:EXIT:{ weather.save | jsonclose -w PPWEATHER.* }
 alias _weather.start { weather.setup }
 ; `weather varname [value]
@@ -659,10 +663,11 @@ alias getJFM {
     else return 0
   }
   elseif ($1 isnum) {
-    if ($urlget($1).state == fail) { dispa Downloading failed. Are you connected to the internet? | halt }
+    if ($urlget($1).state == fail) { dispa Downloading JSON For mIRC failed. Are you connected to the internet? | halt }
     elseif ($zip($urlget($1).target,eo,scripts)) { 
       var %file $qt($findfile(scripts\JSON-For-Mirc-1.0.4000,JSON For mIRC.mrc,1))
       if ($sha512(%file,2) == %sha512-1) dispa Loading JSON For mIRC ver1.0.4000 | .load -rs %file
+      else dispa Wrong sha512 hash for %file $+ !      
       .remove $urlget($1).target
     }
     else { dispa Something went wrong unzipping $:t($urlget($1).target) }
@@ -670,6 +675,7 @@ alias getJFM {
   else { 
     var %url https://github.com/SReject/JSON-For-Mirc/archive/v1.0.4000.zip
     var %target JFM.zip
+    dispa Obtaining JSON For mIRC...
     return $urlget(%url,gf,%target,getJFM)
   }
 }
