@@ -501,7 +501,6 @@ alias weather {
     else %switch = m
     %rest = $1-
   }
-  echo -a %switch %rest
   if (%rest) {
     if (%switch === m) {
       var %units $+($hget(pnp.config,weather.ustring),$hget(pnp.config,weather.mstring))
