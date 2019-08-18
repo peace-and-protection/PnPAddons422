@@ -526,7 +526,7 @@ alias weather {
     var %pattern /^[-%20a-z]{2,}$/i
 
     if (($regex(%city,%pattern)) && ($regex(%cc,/^[a-z]{2}$/i))) {
-      var -s %jsonname $lower($+(PPWEATHER.,%city,.,%cc,.,%switch))
+      var %jsonname $lower($+(PPWEATHER.,%city,.,%cc,.,%switch))
       if (!$JSON(%jsonname)) {
         weatherfetch %caller %jsonname %city %cc %units
       }
