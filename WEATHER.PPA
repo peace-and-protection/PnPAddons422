@@ -10,7 +10,7 @@ name=Weather
 group=Tutorial
 popup=Weather
 author=acvxqs
-version=1.06
+version=1.07
 url=https://github.com/acvxqs/PnPAddons422
 email=
 id=ppweather
@@ -475,7 +475,7 @@ alias weather {
   if ($isid) return
 
   var %switch,%rest
-  if (-* iswm $1) {
+  if (+* iswm $1) {
     %switch = $mid($1,2)
     %rest = $2-
   }
@@ -501,6 +501,7 @@ alias weather {
     else %switch = m
     %rest = $1-
   }
+  echo -a %switch %rest
   if (%rest) {
     if (%switch === m) {
       var %units $+($hget(pnp.config,weather.ustring),$hget(pnp.config,weather.mstring))
@@ -522,10 +523,10 @@ alias weather {
     var %city $gettok(%rest,1,44)
     %city = $replace(%city,$chr(32),$chr(37) $+ 20)
     var %cc $gettok(%rest,2,44)
-    var %pattern /^[%20a-z]{2,}$/i
+    var %pattern /^[-%20a-z]{2,}$/i
 
     if (($regex(%city,%pattern)) && ($regex(%cc,/^[a-z]{2}$/i))) {
-      var %jsonname $lower($+(PPWEATHER.,%city,.,%cc,.,%switch))
+      var -s %jsonname $lower($+(PPWEATHER.,%city,.,%cc,.,%switch))
       if (!$JSON(%jsonname)) {
         weatherfetch %caller %jsonname %city %cc %units
       }
@@ -545,8 +546,8 @@ alias weather {
       }
     }
     else {
-      if (%caller == editbox) dispa Usage: /weather {-{m|i|k}} {city},{country code}
-      elseif (%caller == event) msg $chan Usage: $hget(pnp.config,weather.trigger ) {-{m|i|k}} {city},{country code} | msg $chan Example: $hget(pnp.config,weather.trigger) -m Vlissingen,nl
+      if (%caller == editbox) dispa Usage: /weather {+{m|i|k}} {city},{country code}
+      elseif (%caller == event) msg $chan Usage: $hget(pnp.config,weather.trigger ) {+{m|i|k}} {city},{country code} | msg $chan Example: $hget(pnp.config,weather.trigger) +m Vlissingen,nl
     }
   }
   else _dialog -am weather weather 
