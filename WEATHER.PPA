@@ -10,7 +10,7 @@ name=Weather
 group=Tutorial
 popup=Weather
 author=acvxqs
-version=1.01
+version=1.02
 url=https://github.com/acvxqs/PnPAddons422
 email=
 id=ppweather
@@ -603,21 +603,21 @@ alias -l _weatherfetchresult2 {
   var %clouds $json(%jsonname,clouds,all).value            
   var %result 
 
-  if ($left(%opt,1)) %result = City: %city
-  if ($mid(%opt,2,1)) %result = %result Country: %cc
-  if ($mid(%opt,3,1)) %result = %result Weather: %short
-  if ($mid(%opt,4,1)) %result = %result Description: %long
-  if ($mid(%opt,5,1)) %result = %result Humidity: %hum
-  if ($mid(%opt,6,1)) %result = %result Temperature: %temp
-  if ($mid(%opt,7,1)) %result = %result Min. temp.: %min_temp
-  if ($mid(%opt,8,1)) %result = %result Max. temp: %max_temp
-  if ($mid(%opt,9,1)) %result = %result Pressure: %pressure
-  if ($mid(%opt,10,1)) %result = %result Visibility: %vis
-  if ($mid(%opt,11,1)) %result = %result Wind speed: %wspeed
-  if ($mid(%opt,12,1)) %result = %result Wind degree: %wdegree
-  if ($mid(%opt,13,1)) %result = %result Sunrise: ETA $duration($remove($calc($ctime - %sunrise),-),3)
-  if ($mid(%opt,14,1)) %result = %result Sunset: ETA $duration($remove($calc($ctime - %sunset),-),3)
-  if ($mid(%opt,15,1)) %result = %result Clouds: %clouds
+  if ($left(%opt,1)) %result = City: %city •
+  if ($mid(%opt,2,1)) %result = %result Country: %cc •
+  if ($mid(%opt,3,1)) %result = %result Weather: %short •
+  if ($mid(%opt,4,1)) %result = %result Description: %long •
+  if ($mid(%opt,5,1)) %result = %result Humidity: %hum •
+  if ($mid(%opt,6,1)) %result = %result Temperature: %temp •
+  if ($mid(%opt,7,1)) %result = %result Min. temp.: %min_temp •
+  if ($mid(%opt,8,1)) %result = %result Max. temp: %max_temp •
+  if ($mid(%opt,9,1)) %result = %result Pressure: %pressure •
+  if ($mid(%opt,10,1)) %result = %result Visibility: %vis •
+  if ($mid(%opt,11,1)) %result = %result Wind speed: %wspeed •
+  if ($mid(%opt,12,1)) %result = %result Wind degree: %wdegree •
+  if ($mid(%opt,13,1)) %result = %result Sunrise: ETA $duration($remove($calc($ctime - %sunrise),-),3) •
+  if ($mid(%opt,14,1)) %result = %result Sunset: ETA $duration($remove($calc($ctime - %sunset),-),3) •
+  if ($mid(%opt,15,1)) %result = %result Clouds: %clouds •
 
   return %result
 }
