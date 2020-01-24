@@ -1,0 +1,40 @@
+; #= ppslap -rs
+; ########################################
+; Peace and Protection
+; PnP Slap! (standard addon)
+; ########################################
+
+#.ppa.info off
+[addon]
+name=Slap!
+group=Extras
+popup=Slap!
+author=acvxqs
+version=1.00
+url=
+email=
+id=ppslap
+ppver=4.22
+[files]
+1=slap.ppa
+[notes]
+1=Adds the default trout slap to PnP.
+[nicklist]
+1=Slap!:me slaps $$1 around a bit with a large trout
+#.ppa.info end
+
+on *:LOAD:{
+  ; PnP check
+  if (!$_ispnp) {
+    echo 4 -ati2 *** This addon requires Peace and Protection by pai to use.
+    echo 4 -ati2 *** You can download Peace and Protection at http://www.kristshell.net/pnp/
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    halt
+  }
+  ; Invalid load method check
+  if (!$istok($_cfgx(addons,ids),$readini($script,n,addon,id),32)) {
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    dispa Unloading ' $+ $script $+ ' $chr(40) $+ addon is not properly loaded; use /addon to load it $+ $chr(41)
+    halt
+  }
+}
