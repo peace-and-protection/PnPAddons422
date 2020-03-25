@@ -1,0 +1,112 @@
+; #= ppmention -rs
+; ########################################
+; Peace and Protection
+; PnP Mention (standard addon)
+; ########################################
+
+#.ppa.info off
+[addon]
+name=Mention
+group=Extras
+popup=Mention
+author=acvxqs
+version=1.0
+url=https://github.com/acvxqs/PnPAddons422
+email=
+id=ppmention
+ppver=4.22
+vars2=mention.parens mention.braces mention.brackets mention.at mention.colon mention.comma mention.period mention.exclamationmark mention.questionmark mention.tooltipdelay
+[files]
+1=mention.ppa
+[notes]
+1=This addon alerts you when your nick is mentioned. Doubleclick the tooltip to go to the window where your nick is mentioned!
+[menu]
+1=$iif($hget(pnp.config,mention.parens),$style(1)) Enclosed in parentheses? $chr(9) $chr(40) $+ $iif($me,$me,$iif($mnick,$mnick,<nick>)) $+ $chr(41) : if ($hget(pnp.config,mention.parens)) `set mention.parens 0 | else `set mention.parens 1
+2=$iif($hget(pnp.config,mention.braces),$style(1)) Enclosed in curly braces? $chr(9) $chr(123) $+ $iif($me,$me,$iif($mnick,$mnick,<nick>)) $+ $chr(125) : if ($hget(pnp.config,mention.braces)) `set mention.braces 0 | else `set mention.braces 1
+3=$iif($hget(pnp.config,mention.brackets),$style(1)) Enclosed in square brackets? $chr(9) $chr(91) $+ $iif($me,$me,$iif($mnick,$mnick,<nick>)) $+ $chr(93) : if ($hget(pnp.config,mention.brackets)) `set mention.brackets 0 | else `set mention.brackets 1
+4=-
+5=$iif($hget(pnp.config,mention.at),$style(1)) Prefixed with an at symbol? $chr(9) $chr(64) $+ $iif($me,$me,$iif($mnick,$mnick,<nick>)) : if ($hget(pnp.config,mention.at)) `set mention.at 0 | else `set mention.at 1
+6=-
+7=$iif($hget(pnp.config,mention.comma),$style(1)) Postfixed with a comma? $chr(9) $iif($me,$me,$iif($mnick,$mnick,<nick>)) $+ $chr(44) : if ($hget(pnp.config,mention.comma)) `set mention.comma 0 | else `set mention.comma 1
+8=$iif($hget(pnp.config,mention.colon),$style(1)) Postfixed with a colon? $chr(9) $iif($me,$me,$iif($mnick,$mnick,<nick>)) $+ $chr(58) : if ($hget(pnp.config,mention.colon)) `set mention.colon 0 | else `set mention.colon 1
+9=$iif($hget(pnp.config,mention.period),$style(1)) Postfixed with a period? $chr(9) $iif($me,$me,$iif($mnick,$mnick,<nick>)) $+ $chr(46) : if ($hget(pnp.config,mention.period)) `set mention.period 0 | else `set mention.period 1
+10=$iif($hget(pnp.config,mention.exclamationmark),$style(1)) Postfixed with an exclamationmark? $chr(9) $iif($me,$me,$iif($mnick,$mnick,<nick>)) $+ $chr(33) : if ($hget(pnp.config,mention.exclamationmark)) `set mention.exclamationmark 0 | else `set mention.exclamationmark 1
+11=$iif($hget(pnp.config,mention.questionmark),$style(1)) Postfixed with a questionmark? $chr(9) $iif($me,$me,$iif($mnick,$mnick,<nick>)) $+ $chr(63) : if ($hget(pnp.config,mention.questionmark)) `set mention.questionmark 0 | else `set mention.questionmark 1
+12=-
+13=Set tooltip delay $chr(9) $hget(pnp.config,mention.tooltipdelay) seconds : `set mention.tooltipdelay $_entry(-2,$hget(pnp.config,mention.tooltipdelay),Delay value for tooltip (in seconds)?)
+#.ppa.info end
+
+on *:LOAD:{
+  ; PnP check
+  if (!$_ispnp) {
+    echo 4 -ati2 *** This addon requires Peace and Protection by pai to use.
+    echo 4 -ati2 *** You can download Peace and Protection at http://www.kristshell.net/pnp/
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    halt
+  }
+  ; Invalid load method check
+  if (!$istok($_cfgx(addons,ids),$readini($script,n,addon,id),32)) {
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    dispa Unloading ' $+ $script $+ ' $chr(40) $+ addon is not properly loaded; use /addon to load it $+ $chr(41)
+    halt
+  }
+  mention.setup
+}
+alias -l mention.setup {
+  `set mention.parens 1
+  `set mention.braces 1
+  `set mention.brackets 1
+  `set mention.at 1
+  `set mention.colon 1
+  `set mention.comma 1
+  `set mention.period 1
+  `set mention.exclamationmark 1
+  `set mention.questionmark 1
+  `set mention.tooltipdelay 7
+}
+on *:TEXT:$(* $+ $me $+ *):#:{
+  var %flag 0
+  var %text $strip($1-)
+
+  if ($istok(%text,$me,32)) %flag = 1
+
+  ; enclosed in parentheses, curly braces or square brackets?
+  elseif (($hget(pnp.config,mention.parens)) && ($istok($1-,$chr(40) $+ $me $+ $chr(41),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.braces)) && ($istok($1-,$chr(123) $+ $me $+ $chr(125),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.brackets)) && ($istok($1-,$chr(91) $+ $me $+ $chr(93),32))) %flag = 1
+
+  ; nickname starts with '@'?
+  elseif (($hget(pnp.config,mention.at)) && ($istok($1-,$chr(64) $+ $me,32))) %flag = 1
+
+  ; nickname ends with ':' ',' '.' '!' or '?'
+  elseif (($hget(pnp.config,mention.colon)) && ($istok($1-,$me $+ $chr(58),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.comma)) && ($istok($1-,$me $+ $chr(44),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.period)) && ($istok($1-,$me $+ $chr(46),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.exclamationmark)) && ($istok($1-,$me $+ $chr(33),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.questionmark)) && ($istok($1-,$me $+ $chr(63),32))) %flag = 1
+
+  if (%flag) noop $tip(mention. $+ $cid $+ . $chan, Mention - on TEXT, Your nickname was mentioned in $chan on $network,$hget(pnp.config,mention.tooltipdelay),$null,$null,if (!$appactive) showmirc -s  $(|) scid $cid window -a $chan )
+}
+on *:ACTION:$(* $+ $me $+ *):#:{
+  var %flag 0
+  var %text $strip($1-)
+
+  if ($istok(%text,$me,32)) %flag = 1
+
+  ; enclosed in parentheses, curly braces or square brackets?
+  elseif (($hget(pnp.config,mention.parens)) && ($istok($1-,$chr(40) $+ $me $+ $chr(41),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.braces)) && ($istok($1-,$chr(123) $+ $me $+ $chr(125),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.brackets)) && ($istok($1-,$chr(91) $+ $me $+ $chr(93),32))) %flag = 1
+
+  ; nickname starts with '@'?
+  elseif (($hget(pnp.config,mention.at)) && ($istok($1-,$chr(64) $+ $me,32))) %flag = 1
+
+  ; nickname ends with ':' ',' '.' '!' or '?'
+  elseif (($hget(pnp.config,mention.colon)) && ($istok($1-,$me $+ $chr(58),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.comma)) && ($istok($1-,$me $+ $chr(44),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.period)) && ($istok($1-,$me $+ $chr(46),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.exclamationmark)) && ($istok($1-,$me $+ $chr(33),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.questionmark)) && ($istok($1-,$me $+ $chr(63),32))) %flag = 1
+
+  if (%flag) noop $tip(mention. $+ $cid $+ . $chan, Mention - on ACTION, Your nickname was mentioned in $chan on $network,$hget(pnp.config,mention.tooltipdelay),$null,$null,if (!$appactive) showmirc -s  $(|) scid $cid window -a $chan )
+}
