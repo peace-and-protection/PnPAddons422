@@ -71,19 +71,19 @@ on *:TEXT:$(* $+ $me $+ *):#:{
   if ($istok(%text,$me,32)) %flag = 1
 
   ; enclosed in parentheses, curly braces or square brackets?
-  elseif (($hget(pnp.config,mention.parens)) && ($istok($1-,$chr(40) $+ $me $+ $chr(41),32))) %flag = 1
-  elseif (($hget(pnp.config,mention.braces)) && ($istok($1-,$chr(123) $+ $me $+ $chr(125),32))) %flag = 1
-  elseif (($hget(pnp.config,mention.brackets)) && ($istok($1-,$chr(91) $+ $me $+ $chr(93),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.parens)) && ($istok(%text,$chr(40) $+ $me $+ $chr(41),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.braces)) && ($istok(%text,$chr(123) $+ $me $+ $chr(125),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.brackets)) && ($istok(%text,$chr(91) $+ $me $+ $chr(93),32))) %flag = 1
 
   ; nickname starts with '@'?
-  elseif (($hget(pnp.config,mention.at)) && ($istok($1-,$chr(64) $+ $me,32))) %flag = 1
+  elseif (($hget(pnp.config,mention.at)) && ($istok(%text,$chr(64) $+ $me,32))) %flag = 1
 
   ; nickname ends with ':' ',' '.' '!' or '?'
-  elseif (($hget(pnp.config,mention.colon)) && ($istok($1-,$me $+ $chr(58),32))) %flag = 1
-  elseif (($hget(pnp.config,mention.comma)) && ($istok($1-,$me $+ $chr(44),32))) %flag = 1
-  elseif (($hget(pnp.config,mention.period)) && ($istok($1-,$me $+ $chr(46),32))) %flag = 1
-  elseif (($hget(pnp.config,mention.exclamationmark)) && ($istok($1-,$me $+ $chr(33),32))) %flag = 1
-  elseif (($hget(pnp.config,mention.questionmark)) && ($istok($1-,$me $+ $chr(63),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.colon)) && ($istok(%text,$me $+ $chr(58),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.comma)) && ($istok(%text,$me $+ $chr(44),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.period)) && ($istok(%text,$me $+ $chr(46),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.exclamationmark)) && ($istok(%text,$me $+ $chr(33),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.questionmark)) && ($istok(%text,$me $+ $chr(63),32))) %flag = 1
 
   if (%flag) noop $tip(mention. $+ $cid $+ . $chan, Mention - on TEXT, Your nickname was mentioned in $chan on $network,$hget(pnp.config,mention.tooltipdelay),$null,$null,if (!$appactive) showmirc -s  $(|) scid $cid window -a $chan )
 }
@@ -94,19 +94,19 @@ on *:ACTION:$(* $+ $me $+ *):#:{
   if ($istok(%text,$me,32)) %flag = 1
 
   ; enclosed in parentheses, curly braces or square brackets?
-  elseif (($hget(pnp.config,mention.parens)) && ($istok($1-,$chr(40) $+ $me $+ $chr(41),32))) %flag = 1
-  elseif (($hget(pnp.config,mention.braces)) && ($istok($1-,$chr(123) $+ $me $+ $chr(125),32))) %flag = 1
-  elseif (($hget(pnp.config,mention.brackets)) && ($istok($1-,$chr(91) $+ $me $+ $chr(93),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.parens)) && ($istok(%text,$chr(40) $+ $me $+ $chr(41),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.braces)) && ($istok(%text,$chr(123) $+ $me $+ $chr(125),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.brackets)) && ($istok(%text,$chr(91) $+ $me $+ $chr(93),32))) %flag = 1
 
   ; nickname starts with '@'?
-  elseif (($hget(pnp.config,mention.at)) && ($istok($1-,$chr(64) $+ $me,32))) %flag = 1
+  elseif (($hget(pnp.config,mention.at)) && ($istok(%text,$chr(64) $+ $me,32))) %flag = 1
 
   ; nickname ends with ':' ',' '.' '!' or '?'
-  elseif (($hget(pnp.config,mention.colon)) && ($istok($1-,$me $+ $chr(58),32))) %flag = 1
-  elseif (($hget(pnp.config,mention.comma)) && ($istok($1-,$me $+ $chr(44),32))) %flag = 1
-  elseif (($hget(pnp.config,mention.period)) && ($istok($1-,$me $+ $chr(46),32))) %flag = 1
-  elseif (($hget(pnp.config,mention.exclamationmark)) && ($istok($1-,$me $+ $chr(33),32))) %flag = 1
-  elseif (($hget(pnp.config,mention.questionmark)) && ($istok($1-,$me $+ $chr(63),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.colon)) && ($istok(%text,$me $+ $chr(58),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.comma)) && ($istok(%text,$me $+ $chr(44),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.period)) && ($istok(%text,$me $+ $chr(46),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.exclamationmark)) && ($istok(%text,$me $+ $chr(33),32))) %flag = 1
+  elseif (($hget(pnp.config,mention.questionmark)) && ($istok(%text,$me $+ $chr(63),32))) %flag = 1
 
   if (%flag) noop $tip(mention. $+ $cid $+ . $chan, Mention - on ACTION, Your nickname was mentioned in $chan on $network,$hget(pnp.config,mention.tooltipdelay),$null,$null,if (!$appactive) showmirc -s  $(|) scid $cid window -a $chan )
 }
