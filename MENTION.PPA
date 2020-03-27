@@ -10,7 +10,7 @@ name=Mention
 group=Extras
 popup=Mention
 author=acvxqs
-version=1.0
+version=1.1
 url=https://github.com/acvxqs/PnPAddons422
 email=
 id=ppmention
@@ -85,7 +85,7 @@ on *:TEXT:$(* $+ $me $+ *):#:{
   elseif (($hget(pnp.config,mention.exclamationmark)) && ($istok(%text,$me $+ $chr(33),32))) %flag = 1
   elseif (($hget(pnp.config,mention.questionmark)) && ($istok(%text,$me $+ $chr(63),32))) %flag = 1
 
-  if (%flag) noop $tip(mention. $+ $cid $+ . $chan, Mention - on TEXT, Your nickname was mentioned in $chan on $network,$hget(pnp.config,mention.tooltipdelay),$null,$null,if (!$appactive) showmirc -s  $(|) scid $cid window -a $chan )
+  if ((%flag) && ($chan != $active)) noop $tip(mention. $+ $cid $+ . $chan, Mention - on TEXT, Your nickname was mentioned in $chan on $network,$hget(pnp.config,mention.tooltipdelay),$null,$null,if (!$appactive) showmirc -s  $(|) scid $cid window -a $chan )
 }
 on *:ACTION:$(* $+ $me $+ *):#:{
   var %flag 0
@@ -108,5 +108,5 @@ on *:ACTION:$(* $+ $me $+ *):#:{
   elseif (($hget(pnp.config,mention.exclamationmark)) && ($istok(%text,$me $+ $chr(33),32))) %flag = 1
   elseif (($hget(pnp.config,mention.questionmark)) && ($istok(%text,$me $+ $chr(63),32))) %flag = 1
 
-  if (%flag) noop $tip(mention. $+ $cid $+ . $chan, Mention - on ACTION, Your nickname was mentioned in $chan on $network,$hget(pnp.config,mention.tooltipdelay),$null,$null,if (!$appactive) showmirc -s  $(|) scid $cid window -a $chan )
+  if ((%flag) && ($chan != $active)) noop $tip(mention. $+ $cid $+ . $chan, Mention - on ACTION, Your nickname was mentioned in $chan on $network,$hget(pnp.config,mention.tooltipdelay),$null,$null,if (!$appactive) showmirc -s  $(|) scid $cid window -a $chan )
 }
