@@ -65,12 +65,11 @@ dialogs=
 [files]
 1=qw.ppa
 [notes]
-1=This addon adds Q support to PnP on Quakenet. It includes popups to access almost all Q commands, as well as auto-login features.
-2=Commands can be accessed through popups (channel, nicklist, and status) as well as via '/qw command' or by doing normal op commands when not opped. (for example, /opme or /kick when you aren't opped will use Q automatically, IF you've tried to log in.)
+1=This addon adds Q support to PnP on Quakenet. It has auto-login features.
 [menu]
 [query]
 [interfaces]
-bot=_qw.splice
+bot=
 #.ppa.info end
 
 alias -l _qwcmd { if ($_isserv(qw)) { return /qw } }
@@ -84,7 +83,7 @@ alias qw {
   if ($1 == $null) { var %cmd = $_qwcmd +command -#channel -parameters * ! $+ $_qwall command to perform | _qhelp $_s2f(%cmd) }
   elseif (($_qwischan($2)) && (!$istok(RESET WHOIS,$1,32))) { %chan = $2 | %param = $3- }
   ; commands with parameters (no channel) or commands without parameters (AUTHHISTORY VERSION WHOAMI CHALLENGE)
-  elseif ($istok(HELLO HELP SHOWCOMMANDS USERFLAGS AUTH EMAIL NEWPASS RESET REQUESTPASSWORD WHOIS AUTHHISTORY VERSION WHOAMI CHALLENGE CHALLENGEAUTH,$1,32)) { %param = $2- }
+  elseif ($istok(AUTO HELLO HELP SHOWCOMMANDS USERFLAGS AUTH EMAIL NEWPASS RESET REQUESTPASSWORD WHOIS AUTHHISTORY VERSION WHOAMI CHALLENGE CHALLENGEAUTH,$1,32)) { %param = $2- }
   elseif ($active ischan) { %chan = $active | %param = $2- }
   elseif ($2 == ?) { %chan = $_patch($_entry(-1,$null,Channel for $upper($1) command?)) | %param = $3- }
   elseif (($2 == *) && ($istok(OP VOICE INVITE,$1,32))) { msgqw %qw $upper($1) | halt }
@@ -99,9 +98,93 @@ alias qw {
   if ($istok(AUTHHISTORY VERSION WHOAMI CHALLENGE,$1,32)) { msgqw %qw $upper($1) }
 
   ; commands with parameters (no channel)
-  elseif ($istok(HELLO HELP SHOWCOMMANDS USERFLAGS AUTH EMAIL NEWPASS RESET REQUESTPASSWORD WHOIS CHALLENGEAUTH,$1,32)) {
+  elseif ($istok(AUTO HELLO HELP SHOWCOMMANDS USERFLAGS AUTH EMAIL NEWPASS RESET REQUESTPASSWORD WHOIS CHALLENGEAUTH,$1,32)) {
     %send = msgqw %qw $upper($1)
     goto $1
+
+    :AUTO
+    if ($gettok(%param,1,32) == VIEW) {
+      var %nets = $readini($_cfg(pw.ini),n,qw,nets)
+      if (%nets == $null) dispa No $_qwall auto-logins have been defined.
+      else {
+        _info $_qwcmd auto
+        dispr @Info $_qwall logins $+ -
+        :vloop1
+        var %net = $gettok(%nets,1,32)
+        var %param = $readini($_cfg(pw.ini),n,qw- $+ %net,all)
+        :vloop2
+        var %item = $gettok(%param,1,32)
+        %pw = $readini($_cfg(pw.ini),n,qw- $+ %net,%item)
+        if ($_qwischan(%item)) dispr @Info   - Login to $:t($gettok(%pw,1,32)) on $:s(%item) $chr(40) $+ on %net $+ $chr(41)
+        else dispr @Info   - Login to $:t($gettok(%pw,1,32)) as $:s(%item) $chr(40) $+ on %net $+ $chr(41)
+        %param = $gettok(%param,2-,32)
+        if (%param) goto vloop2
+        %nets = $gettok(%nets,2-,32)
+        if (%nets) goto vloop1
+      }
+    }
+    elseif ($gettok(%param,1,32) == CLEAR) {
+      remini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net)
+      %old = $readini($_cfg(pw.ini),n,qw,nets)
+      %old = $remtok(%old,$hget(pnp. $+ $cid,net),1,32)
+      if (%old == $null) remini $_cfg(pw.ini) qw nets
+      else writeini $_cfg(pw.ini) qw nets %old
+      dispa All $_qwall auto-logins have been deleted. $chr(40) $+ on $hget(pnp. $+ $cid,net) $+ $chr(41)
+    }
+    elseif (u isin $hget(pnp. $+ $cid,-servopt)) {
+      if ($gettok(%param,1,32) == ADD) {
+        if ($gettok(%param,2,32)) %who = $ifmatch
+        else %who = $_entry(-1,$me,Username for auto-login? $+ $chr(40) $+ Enter the username you used to register. $+ $chr(41))
+        if ($gettok(%param,3,32)) %pw = $ifmatch
+        else {
+          _ssplay Question
+          %pw = $$input(Password for auto-login to %qw as %who $+ ?,2)
+          if ($$input(Please retype password to confirm:,2) !=== %pw) _error Passwords do not match.You must enter the password exactly the same each time.
+        }
+        writeini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) %who %qw $_pw.enc(%pw)
+        dispa Auto-login to $:t(%qw) as $:s(%who) added. $chr(40) $+ on $hget(pnp. $+ $cid,net) $+ $chr(41)
+        %old = $readini($_cfg(pw.ini),n,qw- $+ $hget(pnp. $+ $cid,net),all)
+        writeini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) all $addtok(%old,%who,32)
+        %old = $readini($_cfg(pw.ini),n,qw,nets)
+        writeini $_cfg(pw.ini) qw nets $addtok(%old,$hget(pnp. $+ $cid,net),32)
+      }
+      elseif ($gettok(%param,1,32) == DEL)  {
+        if ($gettok(%param,2,32)) %who = $ifmatch
+        else %who = $_entry(-1,$me,Username of auto-login to delete? $+ $chr(40) $+ Enter the username you used to register. $+ $chr(41))
+        %pw = $readini($_cfg(pw.ini),n,qw- $+ $hget(pnp. $+ $cid,net),%who)
+        if (%pw) {
+          %old = $readini($_cfg(pw.ini),n,qw- $+ $hget(pnp. $+ $cid,net),all)
+          %new = $remtok(%old,%who,1,32)
+          if (%new == $null) {
+            remini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) all
+            %old = $readini($_cfg(pw.ini),n,qw,nets)
+            %old = $remtok(%old,$hget(pnp. $+ $cid,net),1,32)
+            if (%old == $null) remini $_cfg(pw.ini) qw nets
+            else writeini $_cfg(pw.ini) qw nets %old
+          }
+          else writeini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) all %new
+          remini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) %who
+          dispa Auto-login for $:s(%who) deleted. $chr(40) $+ on $hget(pnp. $+ $cid,net) $+ $chr(41)
+        }
+        else dispa No auto-login has been defined for $:s(%who) $+ . $chr(40) $+ on $hget(pnp. $+ $cid,net) $+ $chr(41)
+      }
+      else {
+        ; default to logging in as first listed nick
+        %who = $gettok(%param,1,32)
+        if (%who == LOGIN) %who = $gettok(%param,2,32)
+        if (!%who) {
+          %who = $readini($_cfg(pw.ini),n,qw- $+ $hget(pnp. $+ $cid,net),all)
+          var %pos = 1
+          while ($_ischan($gettok(%who,%pos,32))) { inc %pos }
+          %who = $gettok(%who,%pos,32)
+          if (!%who) _error No $_qwall logins have been defined!You can add auto-logins through popups.
+        }
+        %pw = $readini($_cfg(pw.ini),n,qw- $+ $hget(pnp. $+ $cid,net),%who)
+        if (%pw) { %qw = $gettok(%pw,1,32) | %pw = $_pw.enc($gettok(%pw,2,32)) | .msgqw %qw AUTH %who %pw | dispa Logging into $:t(%qw) as $:s(%who) $+ ... }
+        else _error No $_qwall login defined for %who $+ .You can add an auto-login through popups.
+      }
+    }
+    return
 
     ;/msg Q HELLO <email@address.com> <email@address.com>
     ;https://www.quakenet.org/help/q-commands/hello
@@ -475,6 +558,7 @@ on ^*:NOTICE:You do not have sufficient access on & to use chanlev.:?:{
     halt 
   } 
 }
+on *:NOTICE:You are now logged in as &:?:if ($_isbot($nick)) { hadd pnp. $+ $cid -qwacc.username $7 | _loadqwa }
 alias -l qwpop {
   unset %.qw*
   if ($_isserv(qw)) {
@@ -514,18 +598,25 @@ alias -l qwloginas {
   }
   return
 }
+alias -l _qwrequest {
+  if ($istok(begin end,$1,32)) return -
+  if ($me isop $chan($1) && ($_qwall !isop $chan($1))) return Request $_qwall for $replace($v2,&,&&) : msg R REQUESTBOT $v2 | inc %i
+}
 menu status {
   $_qwloginpop
   $_qwall
   .Register an account...:qw HELLO
   .-
+  .$submenu($_qwrequest($1))
+  .-
   .Login
   ..%.qwlogin.1:qw AUTO $qwloginas(1)
-  ..%.qwlogin.2:qw AUTO $qwloginas(2)
   ..-
   ..Add auto-login...:qw AUTO ADD
   ..Delete auto-login...:qw AUTO DEL
-  ..Manual login...:qw LOGIN
+  ..-
+  ..View all auto-logins:qw AUTO VIEW
+  ..Clear all auto-logins...:_okcancel 1 Delete ALL $_xqwall auto-logins? | qw AUTO CLEAR
   ..-
   ..Change password...:qw NEWPASS
   ..Change email...:qw EMAIL
