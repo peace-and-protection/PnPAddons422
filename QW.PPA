@@ -747,7 +747,7 @@ menu channel {
 ; $_qwchanlev(%yourchanlevels,%requiredlevel)
 ; tests required %level against levels stored for %chan
 alias -l _qwchanlev {
-  var %chanlev = $hget(pnp. $+ $cid,-qwacc. $+ $1))
+  var %chanlev = $hget(pnp. $+ $cid,-qwacc. $+ $1)
   if (!%chanlev) return 0
   ; if you're owner, no further checking needed
   if (n isin %chanlev) return 1
