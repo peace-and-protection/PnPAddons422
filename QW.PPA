@@ -600,7 +600,7 @@ alias -l qwloginas {
 }
 alias -l _qwrequest {
   if ($istok(begin end,$1,32)) return -
-  if ($me isop $chan($1) && ($_qwall !isop $chan($1))) return Request $_qwall for $replace($v2,&,&&) : msg R REQUESTBOT $v2 | inc %i
+  if ($me isop $chan($1) && ($_qwall !isop $chan($1))) return Request $_qwall for $replace($v2,&,&&) : msg R REQUESTBOT $v2
 }
 menu status {
   $_qwloginpop
