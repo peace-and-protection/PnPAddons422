@@ -98,7 +98,7 @@ alias qw {
   if ($istok(AUTHHISTORY VERSION WHOAMI CHALLENGE,$1,32)) { msgqw %qw $upper($1) }
 
   ; commands with parameters (no channel)
-  elseif ($istok(AUTO HELLO HELP SHOWCOMMANDS USERFLAGS AUTH EMAIL NEWPASS RESET REQUESTPASSWORD WHOIS CHALLENGEAUTH,$1,32)) {
+  elseif ($istok(AUTO HELLO HELP SHOWCOMMANDS USERFLAGS EMAIL NEWPASS RESET REQUESTPASSWORD WHOIS CHALLENGEAUTH,$1,32)) {
     %send = msgqw %qw $upper($1)
     goto $1
 
@@ -120,12 +120,18 @@ alias qw {
       }
     }
     elseif ($gettok(%param,1,32) == CLEAR) {
-      remini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net)
-      %old = $readini($_cfg(pw.ini),n,qw,nets)
-      %old = $remtok(%old,$hget(pnp. $+ $cid,net),1,32)
-      if (%old == $null) remini $_cfg(pw.ini) qw nets
-      else writeini $_cfg(pw.ini) qw nets %old
-      dispa $_qwall auto-login has been deleted. $chr(40) $+ on $hget(pnp. $+ $cid,net) $+ $chr(41)
+      var %nets = $readini($_cfg(pw.ini),n,qw,nets)
+      if (%nets == $null) dispa Cannot delete entries as no $_qwall auto-logins have been defined.
+
+      else { 
+        :vloop2
+        var %net = $gettok(%nets,1,32)
+        remini $_cfg(pw.ini) qw- $+ %net
+        %nets = $gettok(%nets,2-,32)
+        if (%nets) goto vloop2
+        remini $_cfg(pw.ini) qw
+        dispa All $_qwall auto-logins have been deleted.
+      }
     }
 
     elseif ($gettok(%param,1,32) == ADD) {
@@ -152,10 +158,10 @@ alias qw {
         %old = $readini($_cfg(pw.ini),n,qw- $+ $hget(pnp. $+ $cid,net),qwaccount)
         %new = $remtok(%old,%who,1,32)
         if (%new == $null) {
-          remini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) qwaccount
+          remini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net)
           %old = $readini($_cfg(pw.ini),n,qw,nets)
           %old = $remtok(%old,$hget(pnp. $+ $cid,net),1,32)
-          if (%old == $null) remini $_cfg(pw.ini) qw nets
+          if (%old == $null) remini $_cfg(pw.ini) qw
           else writeini $_cfg(pw.ini) qw nets %old
         }
         else writeini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) qwaccount %new
@@ -165,7 +171,6 @@ alias qw {
       else dispa No auto-login has been defined for $:s(%who) $+ . $chr(40) $+ on $hget(pnp. $+ $cid,net) $+ $chr(41)
     }
     elseif ($gettok(%param,1,32) == LOGIN) {
-      ; default to logging in as first listed nick
       %who = $gettok(%param,2,32)
       if (!%who) {
         %who = $readini($_cfg(pw.ini),n,qw- $+ $hget(pnp. $+ $cid,net),qwaccount)
@@ -412,9 +417,7 @@ alias qw {
     }
     elseif (%param) {
       _qwischanmode %param
-      ;==========***==========
-      ; TO DO
-      ;==========***==========
+      %send %param
     }
 
     else { %send }
@@ -518,34 +521,51 @@ alias msgqw {
   _linedance . $+ $_botacc($1) $2-
   dispr $iif($3 ischan,$3,-ai2) Using $:t($upper($1)) for command: $:h($2-)
 }
-; response to Q VERSION
-on ^*:NOTICE:& version & (Compiled on * (C) *:?:{ if ($_isbot($nick)) set -u1 %:qw.bver $1 | set -u1 %:qw.ver $3 | set -u1 %:qw.compiled $remove($mid($1-,$pos($1-,$chr(40),1),$calc($pos($1-,$chr(41)) - $pos($1-,$chr(40)))),Compiled on $+ $chr(32),$chr(40),$chr(41)) | halt }
-on ^*:NOTICE:Built on * (C) *:?:{ if ($_isbot($nick)) set -u1 %:qw.builton $remove($3,$chr(46)) | dispa $:t(%:qw.bver) version %:qw.ver - Compiled on $:t(%:qw.compiled) - Built on $:t(%:qw.builton) | halt }
-; response to Q CHANLEV %WHO
-on ^*:NOTICE:Flags for & on *:?:{ 
-  var %who = $3, %chan = $left($5,-1), %flags = $6-
-  if (($_isbot($nick)) && ($hget(pnp. $+ $cid,$+(-qwacc.chanlev.,%chan,.,%who)))) {
-    goto $ifmatch
+on *:TEXT:*:?:qwparse $1-
+on *:NOTICE:*:?:qwparse $1-
+alias -l qwparse {
+  if (!$_isbot($nick)) return
+  var %text $1-
+
+  if (& version *Compiled on* iswm %text) {
+    set -u1 %:qw.bver $1 
+    set -u1 %:qw.ver $3 
+    set -u1 %:qw.compiled $remove($mid(%text,$pos(%text,$chr(40),1),$calc($pos(%text,$chr(41)) - $pos(%text,$chr(40)))),Compiled on $+ $chr(32),$chr(40),$chr(41)) 
+  }
+  elseif (Built on *C* iswm %text) {
+    set -u1 %:qw.builton $remove($3,$chr(46)) 
+    dispa $:t(%:qw.bver) version $:t(%:qw.ver) - Compiled on $:t(%:qw.compiled) - Built on $:t(%:qw.builton)
+  }
+  elseif (Flags for & on *) {
+    var %who = $3, %chan = $left($5,-1), %flags = $6-
+    if (!$hget(pnp. $+ $cid,$+(-qwacc.chanlev.,%chan,.,%who)) return
+    goto $v1
 
     :2
     hdel pnp. $+ $cid $+(-qwacc.chanlev.,%chan,.,%who)
     qwa %chan %flags
-    halt
+    return
 
     :1
     hdel pnp. $+ $cid $+(-qwacc.chanlev.,%chan,.,%who)
     dispa $:l(Q) flags for $:l( %who ) on $:l( %chan ) are: $:l( %flags )
-    halt
+    return
+  }
+  elseif (You do not have sufficient access on & to use chanlev. iswm %text) {
+    hdel -w pnp. $+ $cid -qwacc.chanlev.* 
+    dispa Insufficient access on $8 to use chanlev.
+  }
+  elseif (You are now logged in as & iswm %text) {
+    hadd pnp. $+ $cid -qwacc.username $left($7,-1)
+    _loadqwa 
+  }
+  elseif (Done. User & is no longer known on & iswm %text) {
+    _clearqwachan $3 $left($9,-1)
   }
 }
-on ^*:NOTICE:You do not have sufficient access on & to use chanlev.:?:{ 
-  if ($_isbot($nick)) {
-    hdel -w pnp. $+ $cid -qwacc.chanlev.* 
-    dispa Insufficient access on $8 to use chanlev. 
-    halt 
-  } 
+alias -l _clearqwachan {
+
 }
-on *:NOTICE:You are now logged in as &:?:if ($_isbot($nick)) { hadd pnp. $+ $cid -qwacc.username $left($7,-1) | _loadqwa }
 alias -l qwpop {
   unset %.qw*
   if ($_isserv(qw)) {
@@ -600,11 +620,11 @@ menu status {
   .Login
   ..%.qwlogin.1:qw AUTO $qwloginas(1)
   ..-
-  ..Add auto-login...:qw AUTO ADD
-  ..Delete auto-login...:qw AUTO DEL
+  ..$iif(%.qwlogin.1,$style(2)) Add auto-login...:qw AUTO ADD
+  ..$iif(!%.qwlogin.1,$style(2)) Delete auto-login...:qw AUTO DEL
   ..-
-  ..View all auto-logins:qw AUTO VIEW
-  ..Clear all auto-logins...:_okcancel 1 Delete ALL $_xqwall auto-logins? | qw AUTO CLEAR
+  ..View all auto-logins...:qw AUTO VIEW
+  ..Clear all auto-logins...:_okcancel 1 Delete ALL $_qwall auto-logins? | qw AUTO CLEAR
   ..-
   ..Change password...:qw NEWPASS
   ..Change email...:qw EMAIL
@@ -629,7 +649,7 @@ menu status {
   ..Op... (?) $+ $chr(9) $+ [+o]:qw OP ?
   ..Op... (All) $+ $chr(9) $+ [+o]:qw OP *
   ..-
-  ..De-Op all users... $+ $chr(9) $+ [+m]:qw DEOPALL ?
+  ..De-Op all users... (?) $+ $chr(9) $+ [+m]:qw DEOPALL ?
   ..-
   ..Voice... (?) $+ $chr(9) $+ [+v]:qw VOICE ?
   ..Voice... (All) $+ $chr(9) $+ [+v]:qw VOICE *
@@ -641,7 +661,6 @@ menu status {
   ..My userflags...:qw USERFLAGS
   ..Who am I...: qw WHOAMI
   ..Q version...:qw VERSION
-
 }
 menu nicklist {
   $qwpop
@@ -649,18 +668,18 @@ menu nicklist {
   .Add user...:qw ADDUSER # $$1
   .Remove user...:qw REMOVEUSER # $$1
   .-
-  .Op... $+ $chr(9) $+ [+o]:qw OP # $$1 $2 $3 $4 $5 $6 $7 $8 $9 $10
-  .Voice... $+ $chr(9) $+ [+v]:qw VOICE # $$1 $2 $3 $4 $5 $6 $7 $8 $9 $10
+  .$iif($snick(#,$snick(#,0)) !isop #,Op... $+ $chr(9) $+ [+o]):qw OP # $$snicks
+  .$iif($snick(#,$snick(#,0)) !isvoice #,Voice... $+ $chr(9) $+ [+v]):qw VOICE # $$snicks
   .-
   .Chanlev
   ..View...:qw CHANLEV # $$1
   ..Editbox:qw CHANLEV # $$1 edit
   ..-
-  ..$iif($$1 == $me,AUTO-INVITE... $+ $chr(9) $+ [+j]):qw CHANLEV # $$1 +j
-  ..$iif($$1 == $me,$+ $chr(9) $+ [-j]):qw CHANLEV # $$1 -j
+  ..$iif($1 == $me,AUTO-INVITE... $+ $chr(9) $+ [+j]):qw CHANLEV # $1 +j
+  ..$iif($1 == $me,$+ $chr(9) $+ [-j]):qw CHANLEV # $1 -j
   ..-
-  ..$iif($$1 == $me,HIDEWELCOME... $+ $chr(9) $+ [+w]):qw HIDEWELCOME # $$1 +w
-  ..$iif($$1 == $me,$+ $chr(9) $+ [-w]):qw HIDEWELCOME # $$1 -w
+  ..$iif($1 == $me,HIDEWELCOME... $+ $chr(9) $+ [+w]):qw HIDEWELCOME # $1 +w
+  ..$iif($1 == $me,$+ $chr(9) $+ [-w]):qw HIDEWELCOME # $1 -w
   .-
   .Give ownership...:qw GIVEOWNER # $$1
   .-
@@ -679,6 +698,8 @@ menu channel {
   ..Set default $+ $chr(9) $+ [+ntCN]:qw CHANMODE # +ntCN 
   ..-
   ..Clear all $+ $chr(9) $+ [none]:qw CHANMODE # none
+  ..-
+  ..Webpage CHANMODES: http https://www.quakenet.org/help/general/what-channel-modes-are-available-on-quakenet
   .Flags
   ..View...:qw CHANFLAGS #
   ..Editbox...:qw CHANFLAGS # edit
@@ -730,8 +751,6 @@ menu channel {
   ..View:qw CHANSTAT #
   ..-
   ..Reset:qw CHANSTAT # RESET
-  .-
-  .Drop Q
 }
 ; $_qwchanlev(%yourchanlevels,%requiredlevel)
 ; tests required %level against levels stored for %chan
@@ -793,12 +812,12 @@ alias -l _loadqwa {
 alias -l _qwischan if ($left($1,1) isin $chantypes) return 1 | return 0 
 alias -l _qwisflag if ($left($1,1) isin +-) return 1 | return 0
 ; _qwisflags <user|chan|chanlev> <param>
-alias _qwisflags {
-  if (($0 != 2) && (($1 != chanlev) || ($1 != user) || ($1 != chan))) { halt }
+alias -l _qwisflags {
+  if (($0 != 2) && (($1 != chanlev) || ($1 != user) || ($1 != chan))) _error Invalid syntax for this command!!Parameters are missing!
   if ($1 == user) var %allflags c,n
   elseif ($1 == chan) var %allflags a,b,c,e,f,g,h,j,k,p,t,v,w
   elseif ($1 == chanlev) var %allflags a,b,d,g,j,k,m,n,o,p,q,t,v,w
-  else { halt }
+  else _error Invalid syntax for this command!Has to be 'user', 'chan' or 'chanlev'. You typed: ' $+ $1 $+ '
   var %flags $2, %check $replace(%flags,-,$chr(32),+,$chr(32))
   if (!$_qwisflag(%flags)) _error Invalid parameter!Does not start with plus '+' or minus '-' symbol.
   elseif (%check !islower) _error Invalid parameter!Does not contain lower case letter(s).
@@ -806,21 +825,31 @@ alias _qwisflags {
   elseif (($removecs(%check,c,n,$chr(32)) != $null) && ($1 == user)) _error Invalid parameter!Flag(s) not supported. Supported are: $remove(%allflags,$chr(44))
   elseif (($removecs(%check,a,b,c,e,f,g,h,j,k,p,t,v,w,$chr(32)) != $null) && ($1 == chan)) _error Invalid parameter!Flag(s) not supported. Supported are: $remove(%allflags,$chr(44))
   elseif (($removecs(%check,a,b,d,g,j,k,m,n,o,p,q,t,v,w,$chr(32)) != $null) && ($1 == chanlev)) _error Invalid parameter!Flag(s) not supported. Supported are: $remove(%allflags,$chr(44))
-
-  var %x 1
-  while ($gettok(%allflags,%x,44)) {
-    var %char = $ifmatch
-    if ($pos(%flags,%char,0) > 1) { _error Invalid parameter!More than one instance of letter ' $+ %char $+ ' found! }
-    inc %x
+  else {
+    var %x 1
+    while ($gettok(%allflags,%x,44)) {
+      var %char = $ifmatch
+      if ($poscs(%flags,%char,0) > 1) { _error Invalid parameter!More than one instance of letter ' $+ %char $+ ' found! }
+      inc %x
+    }
+  }
+  return
+}
+alias -l _qwischanmode {
+  var %flags $1, %check $replace(%flags,-,$chr(32),+,$chr(32)), %allflags b,c,C,d,D,i,k,l,m,M,n,N,o,p,r,s,t,T,u,v
+  if (!%flags) _error Invalid syntax for this command!Parameter is missing!
+  if (!$_qwisflag(%flags)) _error Invalid parameter!Does not start with plus '+' or minus '-' symbol.
+  elseif ((+ isin %flags) && (- isin %flags) && ($numtok(%check,32) != 2)) _error Invalid parameter!Plus and minus sign conjoined?
+  elseif ($removecs(%check,b,c,C,d,D,i,k,l,m,M,n,N,o,p,r,s,r,t,T,u,V,$chr(32)) != $null) _error Invalid parameter!Flag(s) not supported. Supported are: $remove(%allflags,$chr(44))
+  else {
+    var %x 1
+    while ($gettok(%allflags,%x,44)) {
+      var %char = $ifmatch
+      if ($poscs(%flags,%char,0) > 1) { _error Invalid parameter!More than one instance of letter ' $+ %char $+ ' found! }
+      inc %x
+    }
   }
   return
 }
 on *:SIGNAL:PNP.SIGNON:{ _qw.connect }
 alias -l _qw.connect if ($_isserv(qw)) { hadd -u120 pnp. $+ $cid -qwacc.skip 1 | .qw AUTO LOGIN }
-
-alias -l _qwischanmode {
-  ; Use $1- because keys and limits may be included...
-  var %flags = $1-
-
-  return
-}
