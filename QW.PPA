@@ -67,7 +67,14 @@ dialogs=
 [notes]
 1=This addon adds Q support to PnP on Quakenet. It has auto-login features.
 [menu]
+1=$_qwloginpop
+2=%.qwlogin.1:qw AUTO LOGIN $qwloginas(1)
+3=-
+4=View all auto-logins:qw AUTO VIEW
+5=Clear all auto-logins:_okcancel 1 Delete ALL $_qwall auto-logins? | qw AUTO CLEAR
 [query]
+1=$_qwall
+2=.Whois user:qw WHOIS $1
 [interfaces]
 bot=
 #.ppa.info end
@@ -78,7 +85,7 @@ alias _qwall { if ($_isserv(qw)) { return $hget(pnp. $+ $cid,-servnick) } }
 
 ; /qw command [#chan|?] [params]
 alias qw {
-  if ($_isserv(qw) == $false) { _error You cannot use /qw on this network.  $+ /qw only works on networks with Q bot (Quakenet). }
+  if (($_isserv(qw) == $false) && (($1 != AUTO) || ($istok(ADD DEL VIEW CLEAR,$2,32) == $false))) { _error You cannot use /qw on this network.  $+ /qw only works on networks with Q bot (Quakenet). }
   var %chan, %param, %qw = $hget(pnp. $+ $cid,-servnick), %pw, %send, %who, %new, %old
   if ($1 == $null) { var %cmd = $_qwcmd +command -#channel -parameters * ! $+ $_qwall command to perform | _qhelp $_s2f(%cmd) }
   elseif (($_qwischan($2)) && (!$istok(RESET WHOIS,$1,32))) { %chan = $2 | %param = $3- }
@@ -107,7 +114,7 @@ alias qw {
       var %nets = $readini($_cfg(pw.ini),n,qw,nets)
       if (%nets == $null) dispa No $_qwall auto-logins have been defined.
       else {
-        _info $_qwcmd auto
+        _info $_qwcmd
         dispr @Info $_qwall logins $+ -
         :vloop1
         var %net = $gettok(%nets,1,32)
@@ -555,11 +562,11 @@ alias -l qwparse {
   elseif ($regex(%text,You do not have sufficient access on (\#.+) to use (\w+)\.)) {
     hdel -w pnp. $+ $cid -qwacc. $+ $regml(2) + .* 
     dispa Insufficient access on $regml(1) to use $regml(2)
+    if (($regml(2) == CHANLEV) && ($readini($_cfg(pw.ini),n,qw- $+ $hget(pnp. $+ $cid,net),a $+ $regml(1)) != $null)) remini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) a $+ $regml(1)
     halt
   }
   elseif ($regex(%text,You are now logged in as (.+)\.)) {
-    hadd pnp. $+ $cid -qwacc.username $regml(1)
-    _loadqwa
+    .qw WHOAMI
     halt 
   }
   elseif ($regex(%text,Done\. User (.+) is no longer known on (\#.+)\.)) {
@@ -568,15 +575,130 @@ alias -l qwparse {
     hdel pnp. $+ $cid -qwacc. $+ %chan  
     remini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) a $+ %chan
   }
-  elseif ($regex(%text,[HERE COMES TEXT ABOUT WHEN YOU HAVE SUCCEEDED IN CHANGING YOUR PASSWORD])) {
-    var %from = $hget(pnp. $+ $cid,-qwacc.username)
-    var %pw = $readini($_cfg(pw.ini),n,qw- $+ $hget(pnp. $+ $cid,net),%from)
-    if (%pw) writeini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) %from $gettok(%pw,1,32) $_pw.enc($gettok($1-,-1,32))
+  ;elseif ($regex(%text,[HERE COMES TEXT ABOUT WHEN YOU HAVE SUCCEEDED IN CHANGING YOUR PASSWORD])) {
+  ;  var %from = $hget(pnp. $+ $cid,-qwacc.username)
+  ;  var %pw = $readini($_cfg(pw.ini),n,qw- $+ $hget(pnp. $+ $cid,net),%from)
+  ;  if (%pw) writeini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) %from $gettok(%pw,1,32) $_pw.enc($gettok($1-,-1,32))
+  ;}
+  elseif ($regex(%text,(Remember: .+)) {
+    dispa $regml(1)
+    halt
   }
+  elseif ($regex(%text,(AUTH is not available once you have authed.))) {
+    .qw WHOAMI
+    halt
+  }
+  elseif ($regex(%text,Done.)) {
+    halt
+  }
+  elseif ($regex(%text,User flags for (.+): (\+[cn]))) {
+    hadd pnp. $+ $cid -qwacc.userflags $regml(2)
+    dispa Updated userflags (on $hget(pnp. $+ $cid,net) $+ )
+    halt
+  }
+  elseif ($regex(%text,-Information for user (.+) \(using account (.+)\):)) {
+    set -u1 %:qw.whoami 1
+    if ($regml(1) == $me) hadd pnp. $+ $cid -qwacc.username $regml(2) | halt
+  }
+  elseif ($regex(%text,User ID : (\d+))) {
+    if (%:qw.whoami) {
+      set -u1 %:qw.whoami 1 
+      hadd pnp. $+ $cid -qwacc.userid $regml(1)
+    }
+    halt
+  }
+  elseif ($regex(%text,User flags : (\+[cn]))) {
+    if (%:qw.whoami) {
+      set -u1 %:qw.whoami 1 
+      hadd pnp. $+ $cid -qwacc.userflags $regml(1)
+    }
+    halt
+  }
+  elseif ($regex(%text,Account users : (.+))) {
+    if (%:qw.whoami) {
+      set -u1 %:qw.whoami 1 
+      hadd pnp. $+ $cid -qwacc.users $regml(1)
+    }
+    halt
+  }
+  elseif ($regex(%text,User created : (.+))) {
+    if (%:qw.whoami) {
+      set -u1 %:qw.whoami 1 
+      hadd pnp. $+ $cid -qwacc.usercreated $regml(1)
+    }
+    halt
+  }
+  elseif ($regex(%text,Last auth : (.+))) {
+    if (%:qw.whoami) {
+      set -u1 %:qw.whoami 1 
+      hadd pnp. $+ $cid -qwacc.lastauth $regml(1)
+    }
+    halt
+  }
+  elseif ($regex(%text,Last user@host : (.+))) {
+    if (%:qw.whoami) {
+      set -u1 %:qw.whoami 1 
+      hadd pnp. $+ $cid -qwacc.lastuserhost $regml(1)
+    }
+    halt
+  }   
+  elseif ($regex(%text,Email address : (.+))) {
+    if (%:qw.whoami) {
+      set -u1 %:qw.whoami 1 
+      hadd pnp. $+ $cid -qwacc.emailaddress $regml(1)
+    }
+    halt
+  }  
+  elseif ($regex(%text,Email last set : (.+))) {
+    if (%:qw.whoami) {
+      set -u1 %:qw.whoami 1 
+      hadd pnp. $+ $cid -qwacc.emaillastset $regml(1)
+    }
+    halt
+  }
+  elseif ($regex(%text,Pass last set : (.+))) {
+    if (%:qw.whoami) {
+      set -u1 %:qw.whoami 1 
+      hadd pnp. $+ $cid -qwacc.passlastset $regml(1)
+    }
+    halt
+  }
+  elseif ($regex(%text,Last auth : (.+))) {
+    if (%:qw.whoami) {
+      set -u1 %:qw.whoami 1 
+      hadd pnp. $+ $cid -qwacc.lastauth $regml(1)
+    }
+    halt
+  }
+  elseif ($regex(%text,Known on the following channels:)) {
+    if (%:qw.whoami) {
+      set -u1 %:qw.whoami 1 
+    }
+    halt
+  }
+  elseif ($regex(%text,Channel Flags)) {
+    if (%:qw.whoami) {
+      set -u1 %:qw.whoami 1 
+    }
+    halt
+  }
+  elseif ($regex(%text,(.+)\s(\+.+))) {
+    if (%:qw.whoami) {
+      set -u1 %:qw.whoami 1 
+      if ($_qwischan($regml(1))) hadd pnp. $+ $cid -qwacc. $+ $regml(1) $regml(2)
+    }
+    halt
+  }
+  elseif ($regex(%text,End of list\.)) {
+    if (%:qw.whoami) {
+      unset %:qw.whoami
+    }
+    halt
+  }              
+  ; else halt
 }
-alias -l _clearqwachan {
+on me:*:JOIN:#:if (($_isserv(qw)) && ($hget(pnp. $+ $cid,-qwacc.username)) && ($hget(pnp. $+ $cid,-qwacc. $+ $chan))) .qw CHANLEV $chan $hget(pnp. $+ $cid,-qwacc.username)
 
-}
 alias -l qwpop {
   unset %.qw*
   if ($_isserv(qw)) {
@@ -623,27 +745,27 @@ alias _qwrequest {
 menu status {
   $_qwloginpop
   $_qwall
-  .Register an account:qw HELLO
+  .$iif(!$hget(pnp. $+ $cid,-qwacc.username),Register an account):qw HELLO
   .-
   .Request Q
   ..$submenu($_qwrequest($1))
   .-
   .Login
-  ..%.qwlogin.1:qw AUTO LOGIN $qwloginas(1)
+  ..$iif($hget(pnp. $+ $cid,-qwacc.username),$style(3)) %.qwlogin.1 : qw AUTO LOGIN $qwloginas(1)
   ..-
-  ..$iif(%.qwlogin.1,$style(2)) Add auto-login:qw AUTO ADD
-  ..$iif(!%.qwlogin.1,$style(2)) Delete auto-login:qw AUTO DEL
+  ..$iif($hget(pnp. $+ $cid,-qwacc.username),$style(2)) Add auto-login:qw AUTO ADD
+  ..$iif(!$hget(pnp. $+ $cid,-qwacc.username),$style(2)) Delete auto-login:qw AUTO DEL
   ..-
   ..View all auto-logins:qw AUTO VIEW
   ..Clear all auto-logins:_okcancel 1 Delete ALL $_qwall auto-logins? | qw AUTO CLEAR
   ..-
-  ..Change password:qw NEWPASS
-  ..Change email:qw EMAIL
+  ..$iif($hget(pnp. $+ $cid,-qwacc.username),Change password):qw NEWPASS
+  ..$iif($hget(pnp. $+ $cid,-qwacc.username),Change email):qw EMAIL
   ..-
-  ..Auth history:qw AUTHHISTORY
+  ..$iif($hget(pnp. $+ $cid,-qwacc.username),Auth history):qw AUTHHISTORY
   .-
-  .Recovery
-  ..Unban yourself $+ $chr(9) $+ [+o/+m]:qw UNBANME ?
+  .$iif($hget(pnp. $+ $cid,-qwacc.username),Recovery)
+  ..Unban yourself (?) $+ $chr(9) $+ [+o/+m]:qw UNBANME ?
   ..-
   ..Invite yourself (?) $+ $chr(9) $+ [+k]: qw INVITE ? 
   ..Invite yourself (All) $+ $chr(9) $+ [+k]: qw INVITE *
@@ -652,7 +774,7 @@ menu status {
   ..-
   ..Clear channel $+ $chr(9) $+ [+m]:qw CLEARCHAN ?
   ..Recover channel $+ $chr(9) $+ [+m]:qw RECOVER ?
-  .Commands
+  .$iif($hget(pnp. $+ $cid,-qwacc.username),Commands)
   ..Ban (temp) (?) $+ $chr(9) $+ [+m]:qw TEMPBAN ?
   ..Ban (perm) (?) $+ $chr(9) $+ [+m]:qw PERMBAN ?
   ..Unban (?) $+ $chr(9) $+ [+o/+m]:qw BANDEL ?
@@ -665,13 +787,14 @@ menu status {
   ..Voice (?) $+ $chr(9) $+ [+v]:qw VOICE ?
   ..Voice (All) $+ $chr(9) $+ [+v]:qw VOICE *
   .-
-  .Info
+  .$iif($hget(pnp. $+ $cid,-qwacc.username),Info)
   ..Op history (?) $+ $chr(9) $+ [+o]:qw CHANOPHISTORY ?
   ..Statistics (?) $+ $chr(9) $+ [+m]:qw CHANSTAT ?
   ..-
   ..My userflags:qw USERFLAGS
   ..Who am I: qw WHOAMI
-  ..Q version:qw VERSION
+  .-
+  .Q version:qw VERSION
 }
 menu nicklist {
   $qwpop
@@ -763,9 +886,9 @@ menu channel {
   ..-
   ..Reset:qw CHANSTAT # RESET
   .-
-  .Welcome message
-  ..View $+ $chr(9) $+ [+o]:qw WELCOME #
-  ..Edit $+ $chr(9) $+ [+m]:qw WELCOME # $_entry(0,Welcome to my channel!,Enter your welcome message for #) 
+  .$iif($_qwchanlev(#,o),Welcome message)
+  ..$iif($_qwchanlev(#,o),View $+ $chr(9) $+ [+o]):qw WELCOME #
+  ..$iif($_qwchanlev(#,m),Edit $+ $chr(9) $+ [+m]):qw WELCOME # $_entry(0,Welcome to my channel!,Enter your welcome message for #) 
 }
 ; $_qwchanlev(%yourchanlevels,%requiredlevel)
 ; tests required %level against levels stored for %chan
@@ -778,13 +901,13 @@ alias -l _qwchanlev {
   if ($istok(v o m n,$2,32)) {
     goto $2
     :v
-    if ((m isin %chanlev) || (o isin %chanlev) || (v isin %chanlev)) return 1
+    if ((m isincs %chanlev) || (o isincs %chanlev) || (v isincs %chanlev)) return 1
     else return 0
     :o
-    if ((m isin %chanlev) || (o isin %chanlev)) return 1
+    if ((m isincs %chanlev) || (o isincs %chanlev)) return 1
     else return 0
     :m
-    if (m isin %chanlev) return 1
+    if (m isincs %chanlev) return 1
     else return 0
     :n
     return 0
@@ -866,5 +989,5 @@ alias -l _qwischanmode {
   }
   return
 }
-on *:SIGNAL:PNP.SIGNON:{ _qw.connect }
-alias -l _qw.connect if ($_isserv(qw)) { hadd -u120 pnp. $+ $cid -qwacc.skip 1 | .qw AUTO LOGIN }
+on *:SIGNAL:PNP.SIGNON:_qw.connect
+alias -l _qw.connect if ($_isserv(qw)) hadd -u120 pnp. $+ $cid -qwacc.skip 1 | .qw AUTO LOGIN
