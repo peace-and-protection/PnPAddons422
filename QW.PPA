@@ -122,7 +122,6 @@ alias qw {
     elseif ($gettok(%param,1,32) == CLEAR) {
       var %nets = $readini($_cfg(pw.ini),n,qw,nets)
       if (%nets == $null) dispa Cannot delete entries as no $_qwall auto-logins have been defined.
-
       else { 
         :vloop2
         var %net = $gettok(%nets,1,32)
@@ -133,7 +132,6 @@ alias qw {
         dispa All $_qwall auto-logins have been deleted.
       }
     }
-
     elseif ($gettok(%param,1,32) == ADD) {
       if ($gettok(%param,2,32)) %who = $ifmatch
       else %who = $_entry(-1,$me,Username for auto-login? $+ $chr(40) $+ Enter the username you used to register. $+ $chr(41))
@@ -181,20 +179,19 @@ alias qw {
       if (%pw) { %qw = $gettok(%pw,1,32) | %pw = $_pw.enc($gettok(%pw,2,32)) | .msgqw %qw AUTH %who %pw | dispa Logging into $:t(%qw) as $:s(%who) $+ ... }
       else _error No $_qwall login defined for %who $+ .You can add an auto-login through popups.
     }
-
     return
 
     ;/msg Q HELLO <email@address.com> <email@address.com>
     ;https://www.quakenet.org/help/q-commands/hello
     :HELLO
     if (%param) {
-      if ($gettok(%param,1,32) == $gettok(%param,2,32)) { %send %param }
-      else { _error Invalid parameter!You must enter the email address exactly the same each time. }
+      if ($gettok(%param,1,32) === $gettok(%param,2,32)) %send %param
+      else _error Invalid parameter!You must enter the email address exactly the same each time.
     }
     else {
       _ssplay Question
-      %new = $$input(Enter your email address:,2)
-      if (%new !=== $$input(Please retype your email address to confirm:,2)) { _error Email addresses do not match.You must enter your email address exactly the same each time. }
+      %new = $_entry(-1,$null,Enter your email address:)
+      if (%new !=== $_entry(-1,defaultvalue,Please retype your email address to confirm:) _error Email addresses do not match.You must enter your email address exactly the same each time.
       %send %new %new
     }
     return
@@ -203,44 +200,40 @@ alias qw {
     ;https://www.quakenet.org/help/q-commands/help
     :HELP
     %param = $gettok(%param,1,32)
-    if ((%param) && ($readini($script,n,qwcommands,%param))) { %send %param }
-    elseif (%param) { _error Entry not found!No help available for command: %param }
-    else { %send }
+    if ((%param) && ($readini($script,n,qwcommands,%param))) %send %param
+    elseif (%param) _error Entry not found!No help available for command: %param
+    else %send
     return
 
     ;/msg Q SHOWCOMMANDS [<mask>]
     ;https://www.quakenet.org/help/q-commands/showcommands
     :SHOWCOMMANDS
-    if (%param) { %send %param }
-    else { %send }
+    if (%param) %send %param
+    else %send
     return
 
     ;/msg Q USERFLAGS [+|-<flags>]
     ;https://www.quakenet.org/help/q-commands/userflags
     :USERFLAGS
-    if (%param) {
-      _qwisflags user %param
-      %send %param
-    }
-    else { %send }
+    %param = $gettok(%param,1,32)
+    if (%param) _qwisflags user %param | %send %param
+    else %send
     return
 
     ;/msg Q@CServe.quakenet.org EMAIL <password> <email@address.com> <email@address.com>
     ;https://www.quakenet.org/help/q-commands/email
     :EMAIL
+    %param = $gettok(%param,1-3,32)
     if (%param) {
-      if (($numtok(%param,32) == 3) && ($gettok(%param,2,32) === $gettok(%param,3,32))) { %send %param }
-      else { _error Syntax error!Please type: $_qwcmd EMAIL <password> <email@address.com> <email@address.com> }
+      if ($gettok(%param,2,32) === $gettok(%param,3,32)) %send %param
+      else _error Syntax error!Please type: $_qwcmd EMAIL <password> <email@address.com> <email@address.com>
     }
     else { 
       _ssplay Question
-      %pw = $$input(Please type your %qw password:,2)
-      %new = $$input(New email address for %qw $+ ?,2)
-      if (%new !=== $$input(Please retype email address to confirm:,2)) { _error Email addresses do not match.You must enter your email address exactly the same each time. }
-      ;==========***==========
-      ; TO DO
-      ;==========***==========
-      %send %old %new %new 
+      %pw = $$input(Old %qw password?,2)
+      %new = $_entry(-1,$null,New email address for %qw $+ ?)
+      if (%new !=== $_entry(-1,$null,Please retype email address to confirm:)) _error Email addresses do not match.You must enter your email address exactly the same each time.
+      %send %pw %new %new 
 
     }
     return
@@ -248,34 +241,33 @@ alias qw {
     ;/msg Q@CServe.quakenet.org NEWPASS <oldpassword> <newpassword> <newpassword>
     ;https://www.quakenet.org/help/q-commands/newpass
     :NEWPASS
+    %param = $gettok(%param,1-3,32)
     if (%param) {
-      if (($numtok(%param,32) == 3) && ($gettok(%param,2,32) === $gettok(%param,3,32))) { %send %param }
-      else { _error Syntax error!Please type: $_qwcmd NEWPASS <oldpassword> <newpassword> <newpassword> }
+      if ($gettok(%param,2,32) === $gettok(%param,3,32)) %send %param
+      else _error Syntax error!Please type: $_qwcmd NEWPASS <oldpassword> <newpassword> <newpassword>
     }
     else {
       _ssplay Question
-      %old = $$input(Old %qw password?,2)
+      %pw = $$input(Old %qw password?,2)
       %new = $$input(New %qw password?,2)
-      if (%new !=== $$input(Please retype password to confirm:,2)) { _error Passwords do not match.You must enter the password exactly the same each time. }
-      ;==========***==========
-      ; TO DO
-      ;==========***==========
-      %send %old %new %new 
+      if (%new !=== $$input(Please retype password to confirm:,2)) _error Passwords do not match.You must enter the password exactly the same each time.
+      %send %pw %new %new 
     } 
     return
 
     ;/msg Q RESET <username> <code>
     ;https://www.quakenet.org/help/q-commands/reset
     :RESET
+    %param = $gettok(%param,1-2,32)
     if (%param) {
-      if ($numtok(%param,32) == 2) { %send %param }
-      else { _error Syntax error!Please type: $_qwcmd RESET <username> <code> }
+      if ($numtok(%param,32) == 2) %send %param
+      else _error Syntax error!Please type: $_qwcmd RESET <username> <code>
     }
     else {
       _ssplay Question
-      %who = $$input(Username?,eo)
-      %pw = $$input(Q code?,eo)
-      %send %who %code
+      %who = $$_entry(-1,$null,$_qwall username?)
+      %pw = $$_entry(-1,$null,$_qwall code?)
+      %send %who %pw
     }
     return
 
@@ -283,10 +275,10 @@ alias qw {
     ;https://www.quakenet.org/help/q-commands/requestpassword
     :REQUESTPASSWORD
     %param = $gettok(%param,1,32)
-    if (%param) { %send %param } 
+    if (%param) %send %param
     else { 
       _ssplay Question
-      %new = $$input(Email address to send password to?,2)
+      %new = $_entry(-1,$null,Email address to send password to?)
       %send %new
     }
     return
@@ -295,8 +287,8 @@ alias qw {
     ;https://www.quakenet.org/help/q-commands/whois
     :WHOIS
     %param = $gettok(%param,1,32)
-    if (%param) { %send %param }
-    else { %send $me } 
+    if (%param) %send %param
+    else %send $me
     return
 
     ;/msg Q@CServe.quakenet.org CHALLENGEAUTH <username> <response> <algorithm>
@@ -315,19 +307,19 @@ alias qw {
     ;/msg Q ADDUSER <#channel> [+<flags>] <nick1|#auth1> [<nick2|#auth2> [...]]
     ;https://www.quakenet.org/help/q-commands/adduser
     :ADDUSER
-    if ($left($gettok(%param,1,32),1) == +) { var %flags = $gettok(%param,1,32),%who = $gettok(%param,2-,32) }
-    else { var %flags = +aot,%who = $gettok(%param,1-,32) }
+    if ($left($gettok(%param,1,32),1) == +) var %flags = $gettok(%param,1,32),%who = $gettok(%param,2-,32)
+    else var %flags = +aot,%who = $gettok(%param,1-,32)
 
-    if (%who) { %send %flags %who }
-    else { _error Invalid parameter!Please specify one or more usernames. } 
+    if (%who) %send %flags %who
+    else _error Invalid parameter!Please specify one or more usernames. 
     return
 
     ;/msg Q AUTOLIMIT <#channel> [<threshold>]
     ;https://www.quakenet.org/help/q-commands/autolimit
     :AUTOLIMIT
     %param = $gettok(%param,1,32)
-    if (%param isnum) { %send %param }
-    else { %send }
+    if (%param isnum) %send %param 
+    else %send
     return  
 
     ;/msg Q BANCLEAR <#channel>
@@ -357,10 +349,10 @@ alias qw {
     ;/msg Q BANDEL <#channel> <#num|banmask>
     ;https://www.quakenet.org/help/q-commands/bandel
     :BANDEL 
-    if ($numtok(%param,32) != 1) { _error Invalid paramaterPlease type the following: <#num|banmask> }
-    elseif ($_isaddr(%param)) { %send %param } 
-    elseif (%param isnum) { %send $chr(35) $+ %param }
-    else { _error Invalid parameter! $+ %param is not a valid banmask or number. }
+    if ($numtok(%param,32) != 1) _error Invalid paramaterPlease type the following: <#num|banmask>
+    elseif ($_isaddr(%param)) %send %param 
+    elseif (%param isnum) %send $chr(35) $+ %param
+    else _error Invalid parameter! $+ %param is not a valid banmask or number.
     return
 
     ;/msg Q BANTIMER <#channel> [<duration>]
@@ -380,54 +372,57 @@ alias qw {
       _qwisflags chan %param
       %send %param
     }
-    else { %send }
+    else %send
     return  
 
     ;/msg Q CHANLEV <#channel> [<nick|#auth>] [edit|+|-<flags>]]
     ;https://www.quakenet.org/help/q-commands/chanlev
     :CHANLEV
-    var %who = $gettok(%param,1,32),%flags = $gettok(%param,2-,32)
-    if (%flags == edit) {
-      if ((%who == $me) || (%who == $hget(pnp. $+ $cid,-qwacc.username))) {
-        editbox -ap $_qwcmd $upper($1) %chan %who
-        dispa Specify one or more of the following chanlev flags: $:l(+|-abdgjkmnoptvw)
+    var %who = $gettok(%param,1,32), %flags = $gettok(%param,2,32)
+    if ((%who) && (!%flags)) {
+      if ((%who == # $+ $hget(pnp. $+ $cid,-qwacc.username)) || (%who == $me)) hadd pnp. $+ $cid $+(-qwacc.chanlev.,%chan,.,%who) 2
+      else hadd pnp. $+ $cid $+(-qwacc.chanlev.,%chan,.,%who) 1
+      %send %who 
+    }
+    elseif ((%who) && (%flags)) { 
+      if (%flags == edit) {
+        if ((%who == $me) || (%who == # $+ $hget(pnp. $+ $cid,-qwacc.username))) {
+          editbox -ap $_qwcmd $upper($1) %chan %who
+          dispa Specify one or more of the following chanlev flags: $:l(+|-abdgjkmnoptvw)
+        }
+        else {
+          editbox -ap $_qwcmd $upper($1) %chan %who
+          dispa Specify one or more of the following chanlev flags: $:l(+|-abdgkmnoptv)
+        }
       }
       else {
-        editbox -ap $_qwcmd $upper($1) %chan %who
-        dispa Specify one or more of the following chanlev flags: $:l(+|-abdgkmnoptv)
+        _qwisflags chanlev %flags 
+        %send %who %flags
       }
     }
-    elseif (%flags) { 
-      _qwisflags chanlev %flags
-      %send %who %flags
-    }
-    elseif ((%who == # $+ $hget(pnp. $+ $cid,-qwacc.username)) || (%who == $me)) { hadd pnp. $+ $cid $+(-qwacc.chanlev.,%chan,.,%who) 2 | %send %who }
-    elseif (%who) { hadd pnp. $+ $cid $+(-qwacc.chanlev.,%chan,.,%who) 1 | %send %who }
-    else { %send }    
-
+    else %send
     return  
 
     ;/msg Q CHANMODE <#channel> [<modes>|none|edit]
     ;https://www.quakenet.org/help/q-commands/chanmode 
     :CHANMODE
-    if (%param == none) { %send none }
+    if (%param == none) %send none
     elseif (%param == edit) {
       editbox -ap $_qwcmd $upper($1) %chan
       dispa Specify one or more of the following channel modes to enforce or forbid: $:l(+|-bcCdDiklmMnNoprstTuv)
     }
     elseif (%param) {
-      _qwischanmode %param
+      _qwischanmode %param 
       %send %param
     }
-
-    else { %send }
+    else %send
     return  
 
     ;/msg Q CHANSTAT <#channel> [RESET]
     ;https://www.quakenet.org/help/q-commands/chanstat
     :CHANSTAT
-    if (%param === RESET) { %send %param }
-    else { %send }
+    if (%param === RESET) %send %param
+    else %send
     return    
 
     ;/msg Q GIVEOWNER <#channel> <nick|#authname> [<code>]
@@ -439,12 +434,12 @@ alias qw {
     ;/msg Q PERMBAN <#channel> <banmask> [<reason>]
     ;https://www.quakenet.org/help/q-commands/permban 
     :PERMBAN
-    if ($numtok(%param,32) > 1) { var %banmask = $gettok(%param,1,32),%reason = $gettok(%param,2-,32) }
-    elseif ($numtok(%param,32) == 1) { var %reason = $_entry(2,$null,Reason for PERM ban:),%banmask = $gettok(%param,1,32) }
-    else { var %banmask = $_entry(-1,$null,Please enter a valid banmask. For example: *!*@*.be),%reason = $_entry(2,$null,Reason for ban:) }
-    if (!%reason) { %reason = Banned. }
-    if ($_isaddr(%banmask)) { %send %banmask %reason }
-    else { _error Invalid parameter!Please enter a valid banmask. }      
+    if ($numtok(%param,32) > 1) var %banmask = $gettok(%param,1,32),%reason = $gettok(%param,2-,32)
+    elseif ($numtok(%param,32) == 1) var %reason = $_entry(2,$null,Reason for PERM ban:),%banmask = $gettok(%param,1,32)
+    else var %banmask = $_entry(-1,$null,Please enter a valid banmask. For example: *!*@*.be),%reason = $_entry(2,$null,Reason for ban:)
+    if (!%reason) %reason = Banned.
+    if ($_isaddr(%banmask)) %send %banmask %reason
+    else _error Invalid parameter!Please enter a valid banmask.      
     return  
 
     ;/msg Q REMOVEUSER <#channel> <nick1|#auth1> [<nick2|#auth2> [...]]
@@ -456,8 +451,8 @@ alias qw {
     ;/msg Q SETTOPIC <#channel> [<topic>]
     ;https://www.quakenet.org/help/q-commands/settopic 
     :SETTOPIC 
-    if (%param == ?) { var %settopic = $_entry(0,$null,Set the topic to:) }
-    elseif (%param) { var %settopic = %param }
+    if (%param == ?) var %settopic = $_entry(0,$null,Set the topic to:)
+    elseif (%param) var %settopic = %param
 
     if (%settopic) { %send %settopic }
     else { %send }
@@ -519,48 +514,64 @@ alias qw {
 ; /msgqw bot full command
 alias msgqw {
   _linedance . $+ $_botacc($1) $2-
-  dispr $iif($3 ischan,$3,-ai2) Using $:t($upper($1)) for command: $:h($2-)
+  if ($2 == NEWPASS) {
+    dispr $iif($3 ischan,$3,-ai2) Using $:t($upper($1)) for command: $:h(NEWPASS ????? ????? ?????)
+  }
+  else dispr $iif($3 ischan,$3,-ai2) Using $:t($upper($1)) for command: $:h($2-)
 }
-on *:TEXT:*:?:qwparse $1-
-on *:NOTICE:*:?:qwparse $1-
+on ^*:TEXT:*:?:qwparse $1-
+on ^*:NOTICE:*:?:qwparse $1-
 alias -l qwparse {
   if (!$_isbot($nick)) return
   var %text $1-
 
-  if (& version *Compiled on* iswm %text) {
-    set -u1 %:qw.bver $1 
-    set -u1 %:qw.ver $3 
-    set -u1 %:qw.compiled $remove($mid(%text,$pos(%text,$chr(40),1),$calc($pos(%text,$chr(41)) - $pos(%text,$chr(40)))),Compiled on $+ $chr(32),$chr(40),$chr(41)) 
+  if ($regex(%text,(\w+) version (\d+\.\d+) \(Compiled on (\w+ \d \d+)\) \(C\) \d+-\d+ ([^.]+)\.)) {
+    set -u1 %:qw.bver $regml(1) 
+    set -u1 %:qw.ver $regml(2)
+    set -u1 %:qw.compiled $regml(3)
+    set -u1 %:qw.authors $regml(4)
+    halt
   }
-  elseif (Built on *C* iswm %text) {
-    set -u1 %:qw.builton $remove($3,$chr(46)) 
-    dispa $:t(%:qw.bver) version $:t(%:qw.ver) - Compiled on $:t(%:qw.compiled) - Built on $:t(%:qw.builton)
+  elseif ($regex(%text,Built on (\w+)\. \(C\) \d+-\d+ ([^.]+)\.)) {
+    set -u1 %:qw.builton $regml(1) 
+    dispa $:t(%:qw.bver) version $:t(%:qw.ver) - Compiled on $:t(%:qw.compiled) - Built on $:t(%:qw.builton) - Built by: $:t(%:qw.authors)
+    halt
   }
-  elseif (Flags for & on *) {
-    var %who = $3, %chan = $left($5,-1), %flags = $6-
-    if (!$hget(pnp. $+ $cid,$+(-qwacc.chanlev.,%chan,.,%who)) return
-    goto $v1
+  elseif ($regex(%text,Flags for (\w+) on (\#\w+)\: (.+))) {
+    var %who = $regml(1), %chan = $regml(2), %flags = $regml(3), %goto $hget(pnp. $+ $cid,$+(-qwacc.chanlev.,%chan,.,%who))
+    if ($istok(1 2,%goto,32)) goto %goto
+    else return
 
     :2
     hdel pnp. $+ $cid $+(-qwacc.chanlev.,%chan,.,%who)
     qwa %chan %flags
-    return
+    halt
 
     :1
     hdel pnp. $+ $cid $+(-qwacc.chanlev.,%chan,.,%who)
     dispa $:l(Q) flags for $:l( %who ) on $:l( %chan ) are: $:l( %flags )
-    return
+    halt
   }
-  elseif (You do not have sufficient access on & to use chanlev. iswm %text) {
-    hdel -w pnp. $+ $cid -qwacc.chanlev.* 
-    dispa Insufficient access on $8 to use chanlev.
+  elseif ($regex(%text,You do not have sufficient access on (\#.+) to use (\w+)\.)) {
+    hdel -w pnp. $+ $cid -qwacc. $+ $regml(2) + .* 
+    dispa Insufficient access on $regml(1) to use $regml(2)
+    halt
   }
-  elseif (You are now logged in as & iswm %text) {
-    hadd pnp. $+ $cid -qwacc.username $left($7,-1)
-    _loadqwa 
+  elseif ($regex(%text,You are now logged in as (.+)\.)) {
+    hadd pnp. $+ $cid -qwacc.username $regml(1)
+    _loadqwa
+    halt 
   }
-  elseif (Done. User & is no longer known on & iswm %text) {
-    _clearqwachan $3 $left($9,-1)
+  elseif ($regex(%text,Done\. User (.+) is no longer known on (\#.+)\.)) {
+    var %chan = $regml(2)
+    var %who = $regml(1)
+    hdel pnp. $+ $cid -qwacc. $+ %chan  
+    remini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) a $+ %chan
+  }
+  elseif ($regex(%text,[HERE COMES TEXT ABOUT WHEN YOU HAVE SUCCEEDED IN CHANGING YOUR PASSWORD])) {
+    var %from = $hget(pnp. $+ $cid,-qwacc.username)
+    var %pw = $readini($_cfg(pw.ini),n,qw- $+ $hget(pnp. $+ $cid,net),%from)
+    if (%pw) writeini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) %from $gettok(%pw,1,32) $_pw.enc($gettok($1-,-1,32))
   }
 }
 alias -l _clearqwachan {
@@ -612,88 +623,88 @@ alias _qwrequest {
 menu status {
   $_qwloginpop
   $_qwall
-  .Register an account...:qw HELLO
+  .Register an account:qw HELLO
   .-
   .Request Q
   ..$submenu($_qwrequest($1))
   .-
   .Login
-  ..%.qwlogin.1:qw AUTO $qwloginas(1)
+  ..%.qwlogin.1:qw AUTO LOGIN $qwloginas(1)
   ..-
-  ..$iif(%.qwlogin.1,$style(2)) Add auto-login...:qw AUTO ADD
-  ..$iif(!%.qwlogin.1,$style(2)) Delete auto-login...:qw AUTO DEL
+  ..$iif(%.qwlogin.1,$style(2)) Add auto-login:qw AUTO ADD
+  ..$iif(!%.qwlogin.1,$style(2)) Delete auto-login:qw AUTO DEL
   ..-
-  ..View all auto-logins...:qw AUTO VIEW
-  ..Clear all auto-logins...:_okcancel 1 Delete ALL $_qwall auto-logins? | qw AUTO CLEAR
+  ..View all auto-logins:qw AUTO VIEW
+  ..Clear all auto-logins:_okcancel 1 Delete ALL $_qwall auto-logins? | qw AUTO CLEAR
   ..-
-  ..Change password...:qw NEWPASS
-  ..Change email...:qw EMAIL
+  ..Change password:qw NEWPASS
+  ..Change email:qw EMAIL
   ..-
-  ..Auth history...:qw AUTHHISTORY
+  ..Auth history:qw AUTHHISTORY
   .-
   .Recovery
-  ..Unban yourself... $+ $chr(9) $+ [+o/+m]:qw UNBANME ?
+  ..Unban yourself $+ $chr(9) $+ [+o/+m]:qw UNBANME ?
   ..-
-  ..Invite yourself... (?) $+ $chr(9) $+ [+k]: qw INVITE ? 
-  ..Invite yourself... (All) $+ $chr(9) $+ [+k]: qw INVITE *
+  ..Invite yourself (?) $+ $chr(9) $+ [+k]: qw INVITE ? 
+  ..Invite yourself (All) $+ $chr(9) $+ [+k]: qw INVITE *
   ..-
-  ..Reset...:qw RESET
+  ..Reset:qw RESET
   ..-
-  ..Clear channel... $+ $chr(9) $+ [+m]:qw CLEARCHAN ?
-  ..Recover channel... $+ $chr(9) $+ [+m]:qw RECOVER ?
+  ..Clear channel $+ $chr(9) $+ [+m]:qw CLEARCHAN ?
+  ..Recover channel $+ $chr(9) $+ [+m]:qw RECOVER ?
   .Commands
-  ..Ban... (temp) (?) $+ $chr(9) $+ [+m]:qw TEMPBAN ?
-  ..Ban... (perm) (?) $+ $chr(9) $+ [+m]:qw PERMBAN ?
-  ..Unban... (?) $+ $chr(9) $+ [+o/+m]:qw BANDEL ?
+  ..Ban (temp) (?) $+ $chr(9) $+ [+m]:qw TEMPBAN ?
+  ..Ban (perm) (?) $+ $chr(9) $+ [+m]:qw PERMBAN ?
+  ..Unban (?) $+ $chr(9) $+ [+o/+m]:qw BANDEL ?
   ..-
-  ..Op... (?) $+ $chr(9) $+ [+o]:qw OP ?
-  ..Op... (All) $+ $chr(9) $+ [+o]:qw OP *
+  ..Op (?) $+ $chr(9) $+ [+o]:qw OP ?
+  ..Op (All) $+ $chr(9) $+ [+o]:qw OP *
   ..-
-  ..De-Op all users... (?) $+ $chr(9) $+ [+m]:qw DEOPALL ?
+  ..De-Op all users (?) $+ $chr(9) $+ [+m]:qw DEOPALL ?
   ..-
-  ..Voice... (?) $+ $chr(9) $+ [+v]:qw VOICE ?
-  ..Voice... (All) $+ $chr(9) $+ [+v]:qw VOICE *
+  ..Voice (?) $+ $chr(9) $+ [+v]:qw VOICE ?
+  ..Voice (All) $+ $chr(9) $+ [+v]:qw VOICE *
   .-
   .Info
-  ..Op history... (?) $+ $chr(9) $+ [+o]:qw CHANOPHISTORY ?
-  ..Statistics... (?) $+ $chr(9) $+ [+m]:qw CHANSTAT ?
+  ..Op history (?) $+ $chr(9) $+ [+o]:qw CHANOPHISTORY ?
+  ..Statistics (?) $+ $chr(9) $+ [+m]:qw CHANSTAT ?
   ..-
-  ..My userflags...:qw USERFLAGS
-  ..Who am I...: qw WHOAMI
-  ..Q version...:qw VERSION
+  ..My userflags:qw USERFLAGS
+  ..Who am I: qw WHOAMI
+  ..Q version:qw VERSION
 }
 menu nicklist {
   $qwpop
   %.qw
-  .Add user...:qw ADDUSER # $$1
-  .Remove user...:qw REMOVEUSER # $$1
+  .Add user:qw ADDUSER # $$snicks
+  .Remove user:qw REMOVEUSER # $$snicks
   .-
-  .$iif($snick(#,$snick(#,0)) !isop #,Op... $+ $chr(9) $+ [+o]):qw OP # $$snicks
-  .$iif($snick(#,$snick(#,0)) !isvoice #,Voice... $+ $chr(9) $+ [+v]):qw VOICE # $$snicks
+  .$iif($snick(#,$snick(#,0)) !isop #,Op $+ $chr(9) $+ [+o]):qw OP # $$snicks
+  .$iif($snick(#,$snick(#,0)) !isvoice #,Voice $+ $chr(9) $+ [+v]):qw VOICE # $$snicks
   .-
   .Chanlev
-  ..View...:qw CHANLEV # $$1
+  ..View:qw CHANLEV # $$1
   ..Editbox:qw CHANLEV # $$1 edit
   ..-
-  ..$iif($1 == $me,AUTO-INVITE... $+ $chr(9) $+ [+j]):qw CHANLEV # $1 +j
+  ..$iif($1 == $me,AUTO-INVITE $+ $chr(9) $+ [+j]):qw CHANLEV # $1 +j
   ..$iif($1 == $me,$+ $chr(9) $+ [-j]):qw CHANLEV # $1 -j
   ..-
-  ..$iif($1 == $me,HIDEWELCOME... $+ $chr(9) $+ [+w]):qw HIDEWELCOME # $1 +w
+  ..$iif($1 == $me,HIDEWELCOME $+ $chr(9) $+ [+w]):qw HIDEWELCOME # $1 +w
   ..$iif($1 == $me,$+ $chr(9) $+ [-w]):qw HIDEWELCOME # $1 -w
   .-
-  .Give ownership...:qw GIVEOWNER # $$1
+  .Give ownership:qw GIVEOWNER # $$1
   .-
-  .Whois...:qw WHOIS $$1
+  .Whois:qw WHOIS $$1
 }
 menu channel {
   $qwpop
   %.qw
   .Topic
-  ..Set...:qw SETTOPIC #
-  ..Edit...:qw SETTOPIC # ?
+  ..Edit:qw SETTOPIC # ?
+  ..Restore:qw SETTOPIC #
   .Modes
-  ..View...:qw CHANMODE #
-  ..Editbox...:qw CHANMODE # edit
+  ..View:qw CHANMODE #
+  ..Editbox:qw CHANMODE # edit
   ..-
   ..Set default $+ $chr(9) $+ [+ntCN]:qw CHANMODE # +ntCN 
   ..-
@@ -701,8 +712,8 @@ menu channel {
   ..-
   ..Webpage CHANMODES: http https://www.quakenet.org/help/general/what-channel-modes-are-available-on-quakenet
   .Flags
-  ..View...:qw CHANFLAGS #
-  ..Editbox...:qw CHANFLAGS # edit
+  ..View:qw CHANFLAGS #
+  ..Editbox:qw CHANFLAGS # edit
   ..-
   ..Set
   ...AUTO-OP $+ $chr(9) $+ [+a]:qw CHANFLAGS # +a
@@ -743,14 +754,18 @@ menu channel {
   ...-
   ...WELCOME $+ $chr(9) $+ [+w]:qw CHANFLAGS # +w
   ...$+ $chr(9) $+ [-w]:qw CHANFLAGS # -w
-  ...-
-  ...Webpage CHANFLAGS:http https://www.quakenet.org/help/q-commands/chanflags
+  ..-
+  ..Webpage CHANFLAGS:http https://www.quakenet.org/help/q-commands/chanflags
   .-
   .OP History:qw CHANOPHISTORY #
   .Statistics
   ..View:qw CHANSTAT #
   ..-
   ..Reset:qw CHANSTAT # RESET
+  .-
+  .Welcome message
+  ..View $+ $chr(9) $+ [+o]:qw WELCOME #
+  ..Edit $+ $chr(9) $+ [+m]:qw WELCOME # $_entry(0,Welcome to my channel!,Enter your welcome message for #) 
 }
 ; $_qwchanlev(%yourchanlevels,%requiredlevel)
 ; tests required %level against levels stored for %chan
