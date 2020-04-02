@@ -98,6 +98,7 @@ on *:LOAD:{
     dispa Updated SCRIPT\NETWFEAT.DAT...
   }
   if (($level(Q!TheQBot@CServe.quakenet.org) == $null) || ($v1 < 50)) {
+    _okcancel 1 Would you like to add Qbot to your userlist with access level 50 (safe from protections)?
     user Q!TheQBot@CServe.quakenet.org * 50 
   }
 }
