@@ -314,8 +314,12 @@ alias qw {
     ;https://www.quakenet.org/help/q-commands/whois
     :WHOIS
     %param = $gettok(%param,1,32)
-    if (%param) %send %param
-    else %send $me
+    if (!%param) %param = $me
+    if (!$hget(pnp. $+ $cid,-qwacc.whois)) {
+      hadd -u2 pnp. $+ $cid -qwacc.whois 1
+      %send %param
+    }
+    else dispa This command is rate limited.
     return
 
     ;/msg Q@CServe.quakenet.org CHALLENGEAUTH <username> <response> <algorithm>
@@ -472,6 +476,9 @@ alias qw {
     ;/msg Q REMOVEUSER <#channel> <nick1|#auth1> [<nick2|#auth2> [...]]
     ;https://www.quakenet.org/help/q-commands/removeuser 
     :REMOVEUSER
+    if (%param) %who = $_nccs(32,%chan,$_c2s(%param))
+    else %who = $_c2s($_entry(0,$null,User $+ $chr(40) $+ s $+ $chr(41) to remove? $+ $chr(40) $+ You may specify multiple users $+ $chr(41)))
+    %send %who
 
     return   
 
@@ -530,8 +537,8 @@ alias qw {
     return
 
     :OP | :VOICE
-    if (%param) { %who = $_nccs(32,%chan,$_c2s(%param)) }
-    else { %who = $_c2s($_entry(0,$me,$iif($1 == OP,User $+ $chr(40) $+ s $+ $chr(41) to op? $+ $chr(40) $+ You may specify multiple users $+ $chr(41),User $+ $chr(40) $+ s $+ $chr(41) to voice? $+ $chr(40) $+ You may specify multiple users $+ $chr(41)))) }
+    if (%param) %who = $_nccs(32,%chan,$_c2s(%param))
+    else %who = $_c2s($_entry(0,$me,$iif($1 == OP,User $+ $chr(40) $+ s $+ $chr(41) to op? $+ $chr(40) $+ You may specify multiple users $+ $chr(41),User $+ $chr(40) $+ s $+ $chr(41) to voice? $+ $chr(40) $+ You may specify multiple users $+ $chr(41))))
     %send %who
     return
   }
@@ -564,7 +571,7 @@ alias -l qwparse {
     dispa $:t(%:qw.bver) version $:t(%:qw.ver) - Compiled on $:t(%:qw.compiled) - Built on $:t(%:qw.builton) - Built by: $:t(%:qw.authors)
     halt
   }
-  elseif ($regex(%text,Flags for (\w+) on (\#\w+)\: (.+))) {
+  elseif ($regex(%text,Flags for (\w+) on (\#.+): (.+))) {
     var %who = $regml(1), %chan = $regml(2), %flags = $regml(3), %goto $hget(pnp. $+ $cid,$+(-qwacc.chanlev.,%chan,.,%who))
     if ($istok(1 2,%goto,32)) goto %goto
     else return
@@ -627,8 +634,12 @@ alias -l qwparse {
     halt
   }
   elseif ($regex(%text,-Information for user (.+) \(using account (.+)\):)) {
-    set -u1 %:qw.whoami 1
-    if ($regml(1) == $me) hadd pnp. $+ $cid -qwacc.username $regml(2) | halt
+    if ($regml(1) == $me) {
+      set -u1 %:qw.whoami 1 
+      hadd pnp. $+ $cid -qwacc.username $regml(2) 
+    }
+    else dispa Information for user $regml(1) (using account $regml(2) $+ )
+    halt
   }
   elseif ($regex(%text,User ID : (\d+))) {
     if (%:qw.whoami) {
@@ -649,6 +660,8 @@ alias -l qwparse {
       set -u1 %:qw.whoami 1 
       hadd pnp. $+ $cid -qwacc.users $regml(1)
     }
+    else dispa Account users : $:t($regml(1))
+
     halt
   }
   elseif ($regex(%text,User created : (.+))) {
@@ -656,6 +669,7 @@ alias -l qwparse {
       set -u1 %:qw.whoami 1 
       hadd pnp. $+ $cid -qwacc.usercreated $regml(1)
     }
+    else dispa User created : $:t($regml(1))
     halt
   }
   elseif ($regex(%text,Last auth : (.+))) {
@@ -663,6 +677,7 @@ alias -l qwparse {
       set -u1 %:qw.whoami 1 
       hadd pnp. $+ $cid -qwacc.lastauth $regml(1)
     }
+    else dispa Last auth : $:t($regml(1))
     halt
   }
   elseif ($regex(%text,Last user@host : (.+))) {
@@ -839,8 +854,9 @@ menu status {
 menu nicklist {
   $qwpop
   %.qw
-  .Add user:qw ADDUSER # $$snicks
-  .Remove user:qw REMOVEUSER # $$snicks
+  .$iif($_qwchanlev(#,m),Add user (+aot) $+ $chr(9) $+ [+m]):qw ADDUSER # $$snicks
+  .$iif($_qwchanlev(#,m),Add user (+gv) $+ $chr(9) $+ [+m]):qw ADDUSER # +gv $$snicks  
+  .$iif($_qwchanlev(#,m),Remove user):qw REMOVEUSER # $$snicks
   .-
   .$iif($snick(#,$snick(#,0)) !isop #,Op $+ $chr(9) $+ [+o]):qw OP # $$snicks
   .$iif($snick(#,$snick(#,0)) !isvoice #,Voice $+ $chr(9) $+ [+v]):qw VOICE # $$snicks
@@ -863,8 +879,8 @@ menu channel {
   $qwpop
   %.qw
   .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($_qwchanlev(#,m))),Topic)
-  ..Edit:qw SETTOPIC # ?
-  ..Restore:qw SETTOPIC #
+  ..Edit $+ $chr(9) $+ [m]:qw SETTOPIC # ?
+  ..Restore $+ $chr(9) $+ [m]:qw SETTOPIC #
   .Modes
   ..View:qw CHANMODE #
   ..Editbox:qw CHANMODE # edit
@@ -875,10 +891,10 @@ menu channel {
   ..-
   ..Webpage CHANMODES: http https://www.quakenet.org/help/general/what-channel-modes-are-available-on-quakenet
   .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($_qwchanlev(#,o))),Flags)
-  ..$iif($_qwchanlev(#,o),View):qw CHANFLAGS #
-  ..$iif($_qwchanlev(#,m),Editbox):qw CHANFLAGS # edit
+  ..$iif($_qwchanlev(#,o),View $+ $chr(9) $+ [o]):qw CHANFLAGS #
+  ..$iif($_qwchanlev(#,m),Editbox $+ $chr(9) $+ [m]):qw CHANFLAGS # edit
   ..-
-  ..Set
+  ..$iif($_qwchanlev(#,m),Set $+ $chr(9) $+ [m])
   ...AUTO-OP $+ $chr(9) $+ [+a]:qw CHANFLAGS # +a
   ...$+ $chr(9) $+ [-a]:qw CHANFLAGS # -a
   ...-
@@ -935,8 +951,8 @@ menu channel {
   ..$iif($_qwchanlev(#,o),Op history $+ $chr(9) $+ [+o]):qw CHANOPHISTORY #
   ..$iif($_qwchanlev(#,m),Statistics $+ $chr(9) $+ [+m]):qw CHANSTAT #
   .-
-  .$iif($_qwchanlev(#,o),OP History):qw CHANOPHISTORY #
-  .$iif($_qwchanlev(#,m),Statistics)
+  .$iif($_qwchanlev(#,o),OP History $+ $chr(9) $+ [+o]):qw CHANOPHISTORY #
+  .$iif($_qwchanlev(#,m),Statistics $+ $chr(9) $+ [+m])
   ..View:qw CHANSTAT #
   ..-
   ..Reset:qw CHANSTAT # RESET
