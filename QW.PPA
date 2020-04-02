@@ -54,7 +54,7 @@ name=Q Bot
 group=Extras
 popup=Q Bot
 author=acvxqs
-version=1.2
+version=1.3
 url=
 email=
 id=ppqbot
@@ -99,7 +99,6 @@ on *:LOAD:{
   }
   if (($level(Q!TheQBot@CServe.quakenet.org) == $null) || ($v1 < 50)) {
     user Q!TheQBot@CServe.quakenet.org * 50 
-    dispa Added/Modified Q bot userlevel to 50 (safe from protections)...
   }
 }
 alias -l _qwcmd if ($_isserv(qw)) return /qw
@@ -868,8 +867,8 @@ menu nicklist {
   .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($_qwchanlev(#,m))),Add user (+gv) $+ $chr(9) $+ [+m]):qw ADDUSER # +gv $$snicks  
   .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($_qwchanlev(#,m))),Remove user):qw REMOVEUSER # $$snicks
   .-
-  .$iif($snick(#,$snick(#,0)) !isop #,Op $+ $chr(9) $+ [+o]):qw OP # $$snicks
-  .$iif($snick(#,$snick(#,0)) !isvoice #,Voice $+ $chr(9) $+ [+v]):qw VOICE # $$snicks
+  .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($snick(#,$snick(#,0)) !isop #) && ($_qwchanlev(#,o))),Op $+ $chr(9) $+ [+o]):qw OP # $$snicks
+  .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($snick(#,$snick(#,0)) !isvoice #) && ($_qwchanlev(#,v))),Voice $+ $chr(9) $+ [+v]):qw VOICE # $$snicks
   .-
   .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && (($_qwchanlev(#,k))) || ($_qwchanlev(#,o))),Chanlev)
   ..$iif((($_qwchanlev(#,k)) || ($_qwchanlev(#,o))),View $+ $chr(9) $+ [+k/+o]):qw CHANLEV # $$1
@@ -883,7 +882,7 @@ menu nicklist {
   .-
   .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($_qwchanlev(#,n))),Give ownership $+ $chr(9) $+ [+n]):qw GIVEOWNER # $$1
   .-
-  .Whois:qw WHOIS $$1
+  .$iif($hget(pnp. $+ $cid,-qwacc.username),Whois):qw WHOIS $$1
 }
 menu channel {
   $qwpop
@@ -893,11 +892,12 @@ menu channel {
   ..Restore $+ $chr(9) $+ [m]:qw SETTOPIC #
   .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($_qwchanlev(#,o))),Modes)
   ..$iif($_qwchanlev(#,o),View $+ $chr(9) $+ [+o]):qw CHANMODE #
-  ..$iif($_qwchanlev(#,m),Editbox):qw CHANMODE # edit
+  ..$iif($_qwchanlev(#,m),Editbox $+ $chr(9) $+ [+m]):qw CHANMODE # edit
   ..-
-  ..$iif($_qwchanlev(#,m),Set default $+ $chr(9) $+ [+ntCN]):qw CHANMODE # +ntCN 
-  ..-
-  ..$iif($_qwchanlev(#,m),Clear all $+ $chr(9) $+ [none]):qw CHANMODE # none
+  ..$iif($_qwchanlev(#,m),Set $+ $chr(9) $+ [+m])
+  ...$iif($_qwchanlev(#,m),Set default $+ $chr(9) $+ [+ntCN]):qw CHANMODE # +ntCN 
+  ...-
+  ...$iif($_qwchanlev(#,m),Clear all $+ $chr(9) $+ [none]):qw CHANMODE # none
   ..-
   ..Webpage CHANMODES: http https://www.quakenet.org/help/general/what-channel-modes-are-available-on-quakenet
   .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($_qwchanlev(#,o))),Flags)
