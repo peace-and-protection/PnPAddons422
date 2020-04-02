@@ -68,7 +68,7 @@ dialogs=
 1=This addon adds Q support to PnP on Quakenet. It has auto-login features.
 [menu]
 1=$_qwloginpop
-2=%.qwlogin.1:qw AUTO LOGIN $qwloginas(1)
+2=%.qwlogin.1 :qw AUTO LOGIN $qwloginas(1)
 3=-
 4=View all auto-logins:qw AUTO VIEW
 5=Clear all auto-logins:_okcancel 1 Delete ALL $_qwall auto-logins? | qw AUTO CLEAR
@@ -494,7 +494,7 @@ alias qw {
     else { %send }
     return
   }
-  ; channel may not be required, but that is dealth with at the start, for example: '/qw INVITE *' runs /msgqw %qw INVTE
+  ; channel may not be required, but that is dealt with at the start, for example: '/qw INVITE *' runs /msgqw %qw INVTE
   ; channel param is filled now:
   elseif ($istok(INVITE OP VOICE,$1,32)) {
     %send = msgqw %qw $upper($1) %chan
@@ -559,6 +559,14 @@ alias -l qwparse {
     dispa $:l(Q) flags for $:l( %who ) on $:l( %chan ) are: $:l( %flags )
     halt
   }
+  ; ------------------------------------------------------------
+  ; $chan is not filled, because it's a PRIVMSG/PRIVNOTICE , see below
+  ; ERROR - WORK AROUND, WORK TO DO!!!
+  ; ------------------------------------------------------------
+  elseif (($regex(%text,User (.+) is not authed\.)) && ($hget(pnp. $+ $cid,$+(-qwacc.chanlev.,$chan,.,$regml(1))))) {
+    hdel pnp. $+ $cid $+(-qwacc.chanlev.,$chan,.,$regml(1))
+    halt
+  }
   elseif ($regex(%text,You do not have sufficient access on (\#.+) to use (\w+)\.)) {
     hdel -w pnp. $+ $cid -qwacc. $+ $regml(2) + .* 
     dispa Insufficient access on $regml(1) to use $regml(2)
@@ -569,26 +577,28 @@ alias -l qwparse {
     .qw WHOAMI
     halt 
   }
+  elseif ($regex(%text,Done. Flags for (.+) on (\#.+) are now: (\+.+)\.)) {
+    var %chan $regml(2), %flags $regml(3)
+    qwa %chan %flags
+    halt
+  }
   elseif ($regex(%text,Done\. User (.+) is no longer known on (\#.+)\.)) {
-    var %chan = $regml(2)
-    var %who = $regml(1)
+    var %chan $regml(2), %who $regml(1)
     hdel pnp. $+ $cid -qwacc. $+ %chan  
     remini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) a $+ %chan
+    halt
   }
-  ;elseif ($regex(%text,[HERE COMES TEXT ABOUT WHEN YOU HAVE SUCCEEDED IN CHANGING YOUR PASSWORD])) {
+  ;elseif ($regex(%text,[PLACEHOLDER FOR WHEN YOU HAVE SUCCEEDED IN CHANGING YOUR PASSWORD])) {
   ;  var %from = $hget(pnp. $+ $cid,-qwacc.username)
   ;  var %pw = $readini($_cfg(pw.ini),n,qw- $+ $hget(pnp. $+ $cid,net),%from)
   ;  if (%pw) writeini $_cfg(pw.ini) qw- $+ $hget(pnp. $+ $cid,net) %from $gettok(%pw,1,32) $_pw.enc($gettok($1-,-1,32))
   ;}
-  elseif ($regex(%text,(Remember: .+)) {
+  elseif ($regex(%text,(Remember: .+))) {
     dispa $regml(1)
     halt
   }
   elseif ($regex(%text,(AUTH is not available once you have authed.))) {
     .qw WHOAMI
-    halt
-  }
-  elseif ($regex(%text,Done.)) {
     halt
   }
   elseif ($regex(%text,User flags for (.+): (\+[cn]))) {
@@ -692,9 +702,19 @@ alias -l qwparse {
   elseif ($regex(%text,End of list\.)) {
     if (%:qw.whoami) {
       unset %:qw.whoami
+      dispa WHOAMI has been updated (on $hget(pnp. $+ $cid,net) $+ )
     }
     halt
-  }              
+  }
+  elseif ($regex(%text,(Nothing changed\. Your requested flag combination change was either the same as the existing flags, impossible, or you don't have enough access\.))) {
+    dispa $regml(1)
+    halt
+  }
+  elseif ($regex(%text,(.+) is already (voiced|opped) on (\#.+)\.)) {
+    dispa User $:t($regml(1)) is already $regml(2) on $:t($regml(3)) $+ !
+    halt
+  }
+
   ; else halt
 }
 on me:*:JOIN:#:if (($_isserv(qw)) && ($hget(pnp. $+ $cid,-qwacc.username)) && ($hget(pnp. $+ $cid,-qwacc. $+ $chan))) .qw CHANLEV $chan $hget(pnp. $+ $cid,-qwacc.username)
@@ -822,7 +842,7 @@ menu nicklist {
 menu channel {
   $qwpop
   %.qw
-  .Topic
+  .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($_qwchanlev(#,m))),Topic)
   ..Edit:qw SETTOPIC # ?
   ..Restore:qw SETTOPIC #
   .Modes
@@ -834,9 +854,9 @@ menu channel {
   ..Clear all $+ $chr(9) $+ [none]:qw CHANMODE # none
   ..-
   ..Webpage CHANMODES: http https://www.quakenet.org/help/general/what-channel-modes-are-available-on-quakenet
-  .Flags
-  ..View:qw CHANFLAGS #
-  ..Editbox:qw CHANFLAGS # edit
+  .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($_qwchanlev(#,o))),Flags)
+  ..$iif($_qwchanlev(#,o),View):qw CHANFLAGS #
+  ..$iif($_qwchanlev(#,m),Editbox):qw CHANFLAGS # edit
   ..-
   ..Set
   ...AUTO-OP $+ $chr(9) $+ [+a]:qw CHANFLAGS # +a
@@ -880,8 +900,23 @@ menu channel {
   ..-
   ..Webpage CHANFLAGS:http https://www.quakenet.org/help/q-commands/chanflags
   .-
-  .OP History:qw CHANOPHISTORY #
-  .Statistics
+  .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($_qwchanlev(#,v))),Commands)
+  ..$iif($_qwchanlev(#,m),Ban (temp) $+ $chr(9) $+ [+m]):qw TEMPBAN #
+  ..$iif($_qwchanlev(#,m),Ban (perm) $+ $chr(9) $+ [+m]):qw PERMBAN #
+  ..$iif($_qwchanlev(#,o),Unban $+ $chr(9) $+ [+o/+m]):qw BANDEL #
+  ..-
+  ..$iif($_qwchanlev(#,o),Op $+ $chr(9) $+ [+o]):qw OP #
+  ..-
+  ..$iif($_qwchanlev(#,m),De-Op all users $+ $chr(9) $+ [+m]):qw DEOPALL #
+  ..-
+  ..$iif($_qwchanlev(#,v),Voice $+ $chr(9) $+ [+v]):qw VOICE #
+  .-
+  .$iif(($hget(pnp. $+ $cid,-qwacc.username) && ($_qwchanlev(#,o))),Info)
+  ..$iif($_qwchanlev(#,o),Op history $+ $chr(9) $+ [+o]):qw CHANOPHISTORY #
+  ..$iif($_qwchanlev(#,m),Statistics $+ $chr(9) $+ [+m]):qw CHANSTAT #
+  .-
+  .$iif($_qwchanlev(#,o),OP History):qw CHANOPHISTORY #
+  .$iif($_qwchanlev(#,m),Statistics)
   ..View:qw CHANSTAT #
   ..-
   ..Reset:qw CHANSTAT # RESET
@@ -895,22 +930,20 @@ menu channel {
 alias -l _qwchanlev {
   var %chanlev = $hget(pnp. $+ $cid,-qwacc. $+ $1)
   if (!%chanlev) return 0
-  ; if you're owner, no further checking needed
-  if (n isin %chanlev) return 1
-  ;test level 
-  if ($istok(v o m n,$2,32)) {
+  if ($istok(k v o m,$2,32)) {
     goto $2
+    :k
+    if (k isincs %chanlev) return 1
+    else return 0
     :v
-    if ((m isincs %chanlev) || (o isincs %chanlev) || (v isincs %chanlev)) return 1
+    if ((n isincs %chanlev) || (m isincs %chanlev) || (o isincs %chanlev) || (v isincs %chanlev)) return 1
     else return 0
     :o
-    if ((m isincs %chanlev) || (o isincs %chanlev)) return 1
+    if ((n isincs %chanlev) || (m isincs %chanlev) || (o isincs %chanlev)) return 1
     else return 0
     :m
-    if (m isincs %chanlev) return 1
+    if ((n isincs %chanlev) || (m isincs %chanlev)) return 1
     else return 0
-    :n
-    return 0
   }
 }
 ; /qwa [#chan] [+|-flags]
