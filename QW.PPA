@@ -385,19 +385,17 @@ alias qw {
     ;/msg Q BANDEL <#channel> <#num|banmask>
     ;https://www.quakenet.org/help/q-commands/bandel
     :BANDEL
-    %param = $gettok(%param,1,32) 
-    if (!%param) _error Invalid paramaterPlease type the following: <#num|banmask>
-    if ($_isaddr(%param)) %send %param 
-    elseif (%param isnum) %send $chr(35) $+ %param
-    else _error Invalid parameter! $+ %param is not a valid banmask or number.
+    var %unbanmask = $gettok(%param,1,32)
+    if (!%unbanmask) var %unbanmask = $_entry(-1,$null,Please enter a valid bannumber or banmask to unban. For example: *!*@*.be or #1)
+    if (($_isaddr(%unbanmask)) || (($left(%unbanmask,1) == $chr(35)) && ($right(%unbanmask,-1) isnum))) %send %unbanmask
+    else _error Invalid parameter! $+ %unbanmask is not a valid mask.
     return
 
     ;/msg Q BANTIMER <#channel> [<duration>]
     ;https://www.quakenet.org/help/q-commands/bantimer
     :BANTIMER
     %param = $gettok(%param,1,32)
-    if (%param == 0) %send %param
-    elseif ($removecs(%param,m,h,d,w,M,y)) && ($v1 isnum) %send %param
+    if ((%param == 0) || (($removecs(%param,m,h,d,w,M,y)) && ($v1 isnum))) %send %param
     else %send
     return  
 
