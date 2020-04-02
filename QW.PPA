@@ -869,7 +869,7 @@ menu nicklist {
   .$iif($snick(#,$snick(#,0)) !isop #,Op $+ $chr(9) $+ [+o]):qw OP # $$snicks
   .$iif($snick(#,$snick(#,0)) !isvoice #,Voice $+ $chr(9) $+ [+v]):qw VOICE # $$snicks
   .-
-  .$iif($hget(pnp. $+ $cid,-qwacc.username),Chanlev)
+  .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && (($_qwchanlev(#,k))) || ($_qwchanlev(#,o))),Chanlev)
   ..$iif((($_qwchanlev(#,k)) || ($_qwchanlev(#,o))),View $+ $chr(9) $+ [+k/+o]):qw CHANLEV # $$1
   ..$iif($_qwchanlev(#,m),Editbox $+ $chr(9) $+ [+m]):qw CHANLEV # $$1 edit
   ..-
