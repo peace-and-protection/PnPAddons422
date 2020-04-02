@@ -79,9 +79,29 @@ dialogs=
 bot=
 #.ppa.info end
 
-alias -l _qwcmd { if ($_isserv(qw)) { return /qw } }
-;See xw.ppa for other options...
-alias _qwall { if ($_isserv(qw)) { return $hget(pnp. $+ $cid,-servnick) } }
+on *:LOAD:{
+  ; PnP check
+  if (!$_ispnp) {
+    echo 4 -ati2 *** This addon requires Peace and Protection by pai to use.
+    echo 4 -ati2 *** You can download Peace and Protection at http://www.kristshell.net/pnp/
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    halt
+  }
+  ; Invalid load method check
+  if (!$istok($_cfgx(addons,ids),$readini($script,n,addon,id),32)) {
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    dispa Unloading ' $+ $script $+ ' $chr(40) $+ addon is not properly loaded; use /addon to load it $+ $chr(41)
+    halt
+  }
+  if (!$read(script\NETWFEAT.DAT,nts,Quakenet)) { 
+    write -a SCRIPT\NETWFEAT.DAT Quakenet qw u Q@CServe.quakenet.org 
+    dispa Updated SCRIPT\NETWFEAT.DAT...
+  }
+  user Q!TheQBot@CServe.quakenet.org * 50 
+  dispa Adding Q bot to userlist (safe from protections)...
+}
+alias -l _qwcmd if ($_isserv(qw)) return /qw
+alias _qwall if ($_isserv(qw)) return $hget(pnp. $+ $cid,-servnick)
 
 ; /qw command [#chan|?] [params]
 alias qw {
