@@ -54,7 +54,7 @@ name=Q Bot
 group=Extras
 popup=Q Bot
 author=acvxqs
-version=1.1
+version=1.2
 url=
 email=
 id=ppqbot
@@ -97,8 +97,10 @@ on *:LOAD:{
     write -a SCRIPT\NETWFEAT.DAT Quakenet qw u Q@CServe.quakenet.org 
     dispa Updated SCRIPT\NETWFEAT.DAT...
   }
-  user Q!TheQBot@CServe.quakenet.org * 50 
-  dispa Adding Q bot to userlist (safe from protections)...
+  if (($level(Q!TheQBot@CServe.quakenet.org) == $null) || ($v1 < 50)) {
+    user Q!TheQBot@CServe.quakenet.org * 50 
+    dispa Added/Modified Q bot userlevel to 50 (safe from protections)...
+  }
 }
 alias -l _qwcmd if ($_isserv(qw)) return /qw
 alias _qwall if ($_isserv(qw)) return $hget(pnp. $+ $cid,-servnick)
