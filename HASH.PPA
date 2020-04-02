@@ -10,7 +10,7 @@ name=Hash Table Viewer
 group=Extras
 popup=Hash Table Viewer
 author=kapot
-version=1.00
+version=1.1
 url=
 email=
 id=pphash
@@ -40,16 +40,16 @@ on *:LOAD:{
 }
 dialog pphash {
   title "Hash Table Viewer"
-  size -1 -1 216 177
+  size -1 -1 250 177
   icon script\pnp.ico
   option dbu
 
   box "Table(s)", 1, 5 5 100 100
-  box "Item(s)", 2, 110 5 100 100
-  box "Data", 3, 5 110 205 60
+  box "Item(s)", 2, 110 5 135 100
+  box "Data", 3, 5 110 240 60
   combo 4, 15 15 80 80, sort size edit
-  list 5, 120 15 80 80, sort size
-  edit "", 6, 15 120 185 40, multi
+  list 5, 120 15 120 80, sort size
+  edit "", 6, 15 120 225 40, multi
   menu "&?", 10
   item "&Refresh", 11, 10
 }
