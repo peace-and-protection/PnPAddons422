@@ -1067,4 +1067,4 @@ alias -l _qwischanmode {
   return
 }
 on *:SIGNAL:PNP.SIGNON:_qw.connect
-alias -l _qw.connect if ($_isserv(qw)) hadd -u120 pnp. $+ $cid -qwacc.skip 1 | .qw AUTO LOGIN
+alias -l _qw.connect if ($_isserv(qw)) .qw AUTO LOGIN
