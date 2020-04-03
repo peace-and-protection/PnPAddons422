@@ -871,7 +871,7 @@ menu nicklist {
   .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($_qwchanlev(#,m))),Remove user):qw REMOVEUSER # $$snicks
   .-
   .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($snick(#,$snick(#,0)) !isop #) && ($_qwchanlev(#,o))),Op $+ $chr(9) $+ [+o]):qw OP # $$snicks
-  .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($snick(#,$snick(#,0)) !isvoice #) && ($_qwchanlev(#,v))),Voice $+ $chr(9) $+ [+v]):qw VOICE # $$snicks
+  .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && ($snick(#,$snick(#,0)) isreg #) && ($_qwchanlev(#,v))),Voice $+ $chr(9) $+ [+v]):qw VOICE # $$snicks
   .-
   .$iif((($hget(pnp. $+ $cid,-qwacc.username)) && (($_qwchanlev(#,k))) || ($_qwchanlev(#,o))),Chanlev)
   ..$iif((($_qwchanlev(#,k)) || ($_qwchanlev(#,o))),View $+ $chr(9) $+ [+k/+o]):qw CHANLEV # $$1
