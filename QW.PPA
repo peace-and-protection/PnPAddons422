@@ -218,6 +218,7 @@ alias qw {
     ;/msg Q HELLO <email@address.com> <email@address.com>
     ;https://www.quakenet.org/help/q-commands/hello
     :HELLO
+    %param = $gettok(%param,1-2,32)
     if (%param) {
       if ($gettok(%param,1,32) === $gettok(%param,2,32)) %send %param
       else _error Invalid parameter!You must enter the email address exactly the same each time.
@@ -225,7 +226,7 @@ alias qw {
     else {
       _ssplay Question
       %new = $_entry(-1,$null,Enter your email address:)
-      if (%new !=== $_entry(-1,defaultvalue,Please retype your email address to confirm:) _error Email addresses do not match.You must enter your email address exactly the same each time.
+      if (%new !=== $_entry(-1,$null,Please retype your email address to confirm:) _error Email addresses do not match.You must enter your email address exactly the same each time.
       %send %new %new
     }
     return
@@ -242,6 +243,7 @@ alias qw {
     ;/msg Q SHOWCOMMANDS [<mask>]
     ;https://www.quakenet.org/help/q-commands/showcommands
     :SHOWCOMMANDS
+    %param = $gettok(%param,1,32)
     if (%param) %send %param
     else %send
     return
@@ -299,8 +301,8 @@ alias qw {
     }
     else {
       _ssplay Question
-      %who = $$_entry(-1,$null,$_qwall username?)
-      %pw = $$_entry(-1,$null,$_qwall code?)
+      %who = $_entry(-1,$null,$_qwall username?)
+      %pw = $_entry(-1,$null,$_qwall code?)
       %send %who %pw
     }
     return
@@ -835,10 +837,8 @@ menu status {
   ..Invite yourself (?) $+ $chr(9) $+ [+k]: qw INVITE ? 
   ..Invite yourself (All) $+ $chr(9) $+ [+k]: qw INVITE *
   ..-
-  ..Reset:qw RESET
-  ..-
-  ..Clear channel $+ $chr(9) $+ [+m]:qw CLEARCHAN ?
-  ..Recover channel $+ $chr(9) $+ [+m]:qw RECOVER ?
+  ..Clear channel (?) $+ $chr(9) $+ [+m]:qw CLEARCHAN ?
+  ..Recover channel (?) $+ $chr(9) $+ [+m]:qw RECOVER ?
   .$iif($hget(pnp. $+ $cid,-qwacc.username),Commands)
   ..Ban (temp) (?) $+ $chr(9) $+ [+m]:qw TEMPBAN ?
   ..Ban (perm) (?) $+ $chr(9) $+ [+m]:qw PERMBAN ?
@@ -858,6 +858,8 @@ menu status {
   ..-
   ..My userflags:qw USERFLAGS
   ..Who am I: qw WHOAMI
+  .-
+  .Reset:qw RESET
   .-
   .Q version:qw VERSION
 }
@@ -967,13 +969,14 @@ menu channel {
   .-
   .$iif($_qwchanlev(#,o),Welcome message)
   ..$iif($_qwchanlev(#,o),View $+ $chr(9) $+ [+o]):qw WELCOME #
-  ..$iif($_qwchanlev(#,m),Edit $+ $chr(9) $+ [+m]):qw WELCOME # $_entry(0,Welcome to my channel!,Enter your welcome message for #) 
+  ..$iif($_qwchanlev(#,m),Edit $+ $chr(9) $+ [+m]):qw WELCOME # $_entry(0,$null,Enter your welcome message for #) 
 }
 ; $_qwchanlev(%yourchanlevels,%requiredlevel)
 ; tests required %level against levels stored for %chan
 alias -l _qwchanlev {
   var %chanlev = $hget(pnp. $+ $cid,-qwacc. $+ $1)
   if (!%chanlev) return 0
+  if (n isincs %chanlev) return 1
   if ($istok(k v o m,$2,32)) {
     goto $2
     :k
@@ -995,8 +998,8 @@ alias -l _qwchanlev {
 alias qwa {
   if ($server == $null) _error You must be connected to use that command
   if ($_isserv(qw) == $false) _error You cannot use /qwa on this network. $+ /qwa only works on networks with Q. (QuakeNet)
-  if ($_qwischan($1)) { var %chan = $1,%how = $2 }
-  elseif ($active ischan) { var %chan = $active,%how = $1 }
+  if ($_qwischan($1)) var %chan = $1,%how = $2
+  elseif ($active ischan) var %chan = $active,%how = $1
   else _error You must use /qwa in a channel $+ $chr(40) $+ or specify a target channel $+ $chr(41)
   if (%how == $null) {
     %how = $readini($_cfg(pw.ini),n,qw- $+ $hget(pnp. $+ $cid,net),a $+ %chan)
