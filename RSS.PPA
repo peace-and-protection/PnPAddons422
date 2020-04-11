@@ -1,0 +1,365 @@
+; #= pprss -rs
+; ########################################
+; Peace and Protection
+; PnP RSS (standard addon)
+; ########################################
+
+#.ppa.info off
+[addon]
+name=RSS
+group=Extras
+popup=RSS
+author=acvxqs
+version=1.0
+url=
+email=
+id=pprss
+ppver=4.22
+config=rss
+help=
+unload=_rss.unload
+vars=
+vars2=rss.on rss.interval
+windows=@RSS[*
+dialogs=pprss
+timers=.pprss.check
+sockets=
+hashcid=
+hashpnp=
+[files]
+1=rss.ppa
+[notes]
+1=
+[menu]
+1=
+#.ppa.info end
+
+on *:LOAD:{
+  ; PnP check
+  if (!$_ispnp) {
+    echo 4 -ati2 *** This addon requires Peace and Protection by pai to use.
+    echo 4 -ati2 *** You can download Peace and Protection at http://www.kristshell.net/pnp/
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    halt
+  }
+  ; Invalid load method check
+  if (!$istok($_cfgx(addons,ids),$readini($script,n,addon,id),32)) {
+    .timer -mio 1 0 .unload -rs " $+ $script $+ "
+    dispa Unloading ' $+ $script $+ ' $chr(40) $+ addon is not properly loaded; use /addon to load it $+ $chr(41)
+    halt
+  }
+  `set rss.on 0
+  `set rss.interval 60
+  _rssw.entries
+}
+alias _rss.unload {
+  if ($hget(pnp.rss.done)) hfree $v1
+  var %file $scriptdirrss.ini
+  if ($isfile(%file)) .remove " $+ %file $+ "
+}
+alias -l _rssw.entries {
+  _okcancel 1 Do you want to load default RSS feeds?
+  ; De Volkskrant
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/voorpagina/rss.xml $_s2f($+(Voorpagina,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/nieuws-achtergrond/rss.xml $_s2f($+(Nieuws & Achtergrond,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/columns-opinie/rss.xml $_s2f($+(Columns & Opinie,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/podcasts/rss.xml $_s2f($+(Podcasts,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/uitgelicht/rss.xml $_s2f($+(Uitgelicht,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/wetenschap/rss.xml $_s2f($+(Wetenschap,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/mensen/rss.xml $_s2f($+(Mensen,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/de-gids/rss.xml $_s2f($+(De Gids,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/reizen/rss.xml $_s2f($+(Reizen,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/opvoeden/rss.xml $_s2f($+(Opvoeden,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/eten-en-drinken/rss.xml $_s2f($+(Eten en Drinken,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/kijken/rss.xml $_s2f($+(Kijken,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/werken/rss.xml $_s2f($+(Werken,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/cultuur-media/rss.xml $_s2f($+(Cultuur & Media,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/foto/rss.xml $_s2f($+(Foto,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/economie/rss.xml $_s2f($+(Economie,$chr(1),de Volkskrant))
+  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/sport/rss.xml $_s2f($+(Sport,$chr(1),de Volkskrant)) 
+  ; The New York Times
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml $_s2f($+(Home Page (U.S.),$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/World.xml $_s2f($+(World,$chr(1),NYTimes)) 
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Africa.xml $_s2f($+(Africa,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Americas.xml $_s2f($+(Americas,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/AsiaPacific.xml $_s2f($+(Asia Pacific,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Europe.xml $_s2f($+(Europe,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/MiddleEast.xml $_s2f($+(Middle East,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Education.xml $_s2f($+(Education,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml $_s2f($+(Politics,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml $_s2f($+(Economy,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml $_s2f($+(Technology,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml $_s2f($+(Sports,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Science.xml $_s2f($+(Science,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Climate.xml $_s2f($+(Climate,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://www.nytimes.com/services/xml/rss/nyt/Health.xml $_s2f($+(Health,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/ArtandDesign.xml $_s2f($+(Art & Design,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Music.xml $_s2f($+(Music,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Movies.xml $_s2f($+(Movies,$chr(1),NYTimes))
+  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Television.xml $_s2f($+(Television,$chr(1),NYTimes))
+  ; Ars Technica
+  writeini $scriptdirrss.ini RSS https://arstechnica.com/feed/ $_s2f($+(Main Page,$chr(1),Ars Technica)) 
+  ; XKCD.com
+  writeini $scriptdirrss.ini RSS https://xkcd.com/rss.xml $_s2f($+(Main Page,$chr(1),XKCD)) 
+}
+; URLGET RSS FEED -> COM XML (MSXML)   [x]
+; COM XML         -> PARSE DATA        [ ]
+; PARSE DATA      -> NEWSTICKER WINDOW [ ]
+alias rss {
+  if (($1 == on) || ($1 == on)) {
+    `set rss.on 1 
+    if (!$timer(.pprss.check)) .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | .timer.pprss.check -e
+  }
+  elseif (($1 == off) || ($1 == off)) {
+    `set rss.on 0
+    if ($hget(pnp.rss.done)) hfree pnp.rss.done
+    if ($timer(.pprss.check)) .timer.pprss.check off
+    close -@RSS[*
+  }
+  else {
+    _dialog -am pprss pprss
+    return
+  }
+  dispa RSS is $:t($_tf2o($hget(pnp.config,rss.on)))
+}
+alias rsspull if ($timer(.pprss.check)) .timer.pprss.check -e
+alias -l _rss.checkfeeds {
+  var %i 1
+  while ($ini($scriptdirrss.ini,Enabled,%i)) {
+    var %url $v1, %data $readini($scriptdirrss.ini,n,Enabled,%url)
+    tokenize 1 %data
+    var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
+    if (!$window(%win)) _window 2 -n %win -1 -1 -1 -1
+    aline %win $asctime($timestampfmt) $:::
+    aline %win $asctime($timestampfmt) Polling for news...
+    aline %win $asctime($timestampfmt) $:::
+    _rssget %url aline %win 
+    inc %i
+  }
+}
+; IXMLDOMElement Members
+; https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ms757048(v=vs.85)
+alias _rssget {
+  var %error, %pattern https?:\/\/(?:www\.)?([-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6})\b([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)
+  if (!$regex($1,%pattern)) %error = Invalid URL!
+  else {
+    var %t $ticks, %itemcol itemcol. $+ %t, %com rss. $+ %t, %com2 rss2. $+ %t, %com3 rss3. $+ %t, %url $1
+    .comopen %com MSXML2.DOMDocument.6.0
+    if ((!$com(%com)) || ($comerr)) %error = Unable to create an instance of MSXML2.DOMDocument.6.0
+    elseif ((!$com(%com, async, 4, bool, false)) || ($comerr)) %error = Unable to set async property
+    elseif ((!$com(%com, load, 1, bstr*, %url)) || ($comerr)) %error = Unable to load XML from: %url
+    elseif ((!$com(%com, selectnodes, 1, bstr*, /rss/channel/item, dispatch* %itemcol)) || ($comerr)) %error = Unable to select nodes /rss/channel/item
+    else {
+      var %items $comval(%itemcol,0), %item 1
+      if (%items) {
+        while (%item <= %items) {
+          if ((!$com(%itemcol, item, 1, uint, %item, dispatch* %com2)) || ($comerr)) %error = Cannot dispatch XML for individual item to new object
+          if ($com(%com2)) {
+            .comclose %com2 $com(%com2, childnodes, 3, dispatch* %com3) 
+            if ($com(%com3)) {
+              var %children $comval(%com3,0), %child 1
+              while (%child <= %children) {
+                if (!$hget(pnp.rss.done,$sha1($comval(%com3,%child,xml)))) {
+                  hadd -m pnp.rss.done $sha1($comval(%com3,%child,xml)) 1
+                  if ($comval(%com3,%child,tagName) == title) $iif($2,$2-,echo -ag) $asctime($timestampfmt) $:b($_cap1st($comval(%com3,%child,tagName))) : $comval(%com3,%child,text)
+                  elseif ($comval(%com3,%child,tagName) == link) $iif($2,$2-,echo -ag) $asctime($timestampfmt) $:b($_cap1st($comval(%com3,%child,tagName))) : $comval(%com3,%child,text)                
+                  elseif ($comval(%com3,%child,tagName) == description) $iif($2,$2-,echo -ag) $asctime($timestampfmt) $:b($_cap1st($comval(%com3,%child,tagName))) : $_rss.shorten(500,$comval(%com3,%child,text))
+                  elseif ($comval(%com3,%child,tagName) == pubDate) $iif($2,$2-,echo -ag) $asctime($timestampfmt) $:b($_cap1st($comval(%com3,%child,tagName))) : $comval(%com3,%child,text)
+                }
+                inc %child
+              }
+              .comclose %com3
+            }
+          }
+          inc %item
+        }
+      }
+      else %error = No news items found for URL: ' $+ %url $+ '.
+    }
+  }
+  ; Handle errors
+  :error
+  if ($error) var %error $v1 | reseterror
+
+  ; Close coms
+  if ($com(%com)) .comclose %com
+  if ($com(%com2)) .comclose %com2
+  if ($com(%com3)) .comclose %com3
+  if ($com(%itemcol)) .comclose %itemcol
+
+  ; Show error
+  if (%error) dispa $:w($v1)
+}
+alias -l _rss.shorten {
+  if ($len($2-) > $1) return $left($2-,$calc($1 -3)) $+ ...
+  else return $2-
+}
+dialog pprss {
+  title "RSS Central"
+  size -1 -1 292 182
+  ;size -1 -1 600 182
+  option dbu
+  icon script\pnp.ico
+
+  check "Enable RSS", 1, 5 5 50 10
+  text "Poll xml feeds every", 2, 5 20 48 8
+  edit "", 3, 56 19 20 10
+  text "minutes. (10 or more recommended)", 4, 79 20 90 8
+  list 5, 5 50 280 100, size check
+  button "Add", 6, 5 155 37 12
+  button "Edit", 7, 47 155 37 12, disable
+  button "Remove", 8, 89 155 37 12, disable
+  combo 10, 5 35 280 70, size drop
+
+  button "Cancel", 11, 206 155 37 12,cancel 
+  button "OK", 12, 248 155 37 12, ok default
+  list 99, 305 50 280 100, hide
+}
+alias -l _rssd.ok {
+  `set rss.interval $iif(($did(3) isnum 1-9999),$did(3),60)
+  `set rss.on $did(1).state
+}
+on *:DIALOG:pprss:init:0:{
+  did $iif($hget(pnp.config,rss.on),-c,-u) $dname 1
+  did -a $dname 3 $hget(pnp.config,rss.interval)
+  ; load all enabled entries first in hidden listbox
+  var %i 1
+  while ($ini($scriptdirrss.ini,Enabled,%i)) {
+    var %url $v1, %data $readini($scriptdirrss.ini,n,Enabled,%url), %name $gettok(%data,1,1), %group $gettok(%data,2,1)
+    var %string $+(%name,$chr(1),-,$chr(1),%url,$chr(1),%group,$chr(32),1)
+    did -a $dname 99 %string
+    inc %i
+  }
+  _rssd.updcat
+}
+on *:DIALOG:pprss:sclick:5:{
+  did -e $dname 7,8
+  _rssd.rssstate
+}
+on *:DIALOG:pprss:dclick:5:{
+  did -e $dname 7,8
+  _rssd.rssstate
+}
+on *:DIALOG:pprss:sclick:6:{
+  %.fullmsg = Select group name:
+  %.found = $addtok($didtok(10,44),(Make a new group),44)
+  var %group $$dialog(nickcomp,nickcomp,-4)
+  if (%group == (Make a new group)) %group = $_s2f($_entry(0,$null,Please enter the name of the group:))
+  var %name $_s2f($_entry(0,$null,Please enter the name of the feed:))
+  var %url $_entry(-1,$null,Please enter the url of the feed:)
+  writeini $scriptdirrss.ini RSS %url $+(%name,$chr(1),%group)
+  _rssd.updcat
+  _rssd.updrss
+}
+on *:DIALOG:pprss:sclick:7:{ 
+  var %group $did(10)
+  var %string $replace($+($did(5,$did(5).sel),$chr(1),%group),$chr(32),$chr(1))
+  var %newname $_s2f($_entry(0,$gettok($did(5,$did(5).sel),1,32),Please enter the new name of the feed:))
+  var %newfeed $_entry(-1,$gettok($did(5,$did(5).sel),-1,32),Please enter the new url of the feed:)
+  var %newstring $replace($+(%newname - %newfeed,$chr(1),$did(10)),$chr(32),$chr(1))
+  if (%newstring == %string) _error Old data and new data are the same!
+  var %finddid $_finddid($dname,99,%string)
+  if (%finddid) did -o $dname 99 %finddid %newstring $did(5,$did(5).sel).cstate
+  else did -a $dname 99 %newstring $did(5,$did(5).sel).cstate
+  ; remove old entry
+  remini $scriptdirrss.ini RSS $gettok($did(5,$did(5).sel),3,32)
+  ; write new entry
+  writeini $scriptdirrss.ini RSS %newfeed $+(%newname,$chr(1),%group)
+  ; update view
+  _rssd.updrss
+}
+
+on *:DIALOG:pprss:sclick:12:{ 
+  `set rss.interval $iif($did(3) isnum 1-9999,$did(3),10)
+  `set rss.on $did(1).state
+  var %i 1, %lines $did(99).lines
+  while ($did(99,%i)) {
+    var %string $v1, %data $gettok(%string,1,32), %state $gettok(%string,2,32)
+    var %url $gettok(%data,3,1), %name $gettok(%data,1,1), %group $gettok(%data,4,1)
+    var %enabled $readini($scriptdirrss.ini,n,Enabled,%url)
+
+    if ((%enabled) && (%state == R)) { 
+      remini $scriptdirrss.ini Enabled %url
+      remini $scriptdirrss.ini RSS %url
+    }
+    elseif ((%enabled) && (%state == 0)) {
+      remini $scriptdirrss.ini Enabled %url
+    }
+    elseif ((!%enabled) && (%state == R)) {
+      remini $scriptdirrss.ini RSS %url
+    }
+    elseif ((!%enabled) && (%state == 1)) {
+      writeini $scriptdirrss.ini Enabled %url $+(%name,$chr(1),%group)
+    }
+    inc %i
+  }
+  if (($hget(pnp.config,rss.on)) && (!$timer(.pprss.check))) .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | timer.pprss.check -e
+  elseif ((!$hget(pnp.config,rss.on)) && ($timer(.pprss.check))) .timer.pprss.check off
+}
+alias -l _rssd.rssstate {
+  var %rssstate $did(5,$did(5).sel).cstate, %string $replace($+($did(5,$did(5).sel),$chr(1),$did(10)),$chr(32),$chr(1))
+  var %finddid $_finddid($dname,99,%string)
+  goto %rssstate $+ $iif(%finddid,1,0)
+
+  :00
+  return
+
+  :01
+  did -o $dname 99 %finddid $+(%string,$chr(32),0) 
+  return
+
+  :10
+  did -a $dname 99 $+(%string,$chr(32),1)
+  return
+
+  :11
+  did -o $dname 99 %finddid $+(%string,$chr(32),1)
+  return
+}
+on *:DIALOG:pprss:sclick:8:{
+  _okcancel 1 Remove ' $+ $did(5,$did(5).sel) $+ '?
+  ; flag it for removal
+  var %string $replace($+($did(5,$did(5).sel),$chr(1),$did(10)),$chr(32),$chr(1))
+  var %finddid $_finddid($dname,99,%string)
+  if (%finddid) did -o $dname 99 %finddid $+(%string,$chr(32),R)
+  else did -a $dname 99 $+(%string,$chr(32),R)
+  _rssd.updrss
+}
+on *:DIALOG:pprss:sclick:10:_rssd.updrss
+alias -l _rssd.updcat {
+  var %i 1
+  while ($ini($scriptdirrss.ini,RSS,%i)) {
+    var %url $v1, %data $readini($scriptdirrss.ini,n,RSS,%url)
+    tokenize 1 %data
+    if (!$_scandid($dname,10,$2)) did -a $dname 10 $2
+    inc %i
+  }
+}
+alias -l _rssd.updrss {
+  did -r $dname 5
+  did -b $dname 7,8
+  var %i 1
+  while ($ini($scriptdirrss.ini,RSS,%i)) {
+    var %url $v1, %data $readini($scriptdirrss.ini,n,RSS,%url)
+    tokenize 1 %data
+    if ($did(10) == $2) {
+      var %string $1 - %url, %entry $replace($+(%string,$chr(1),$2),$chr(32),$chr(1))
+      if ($_finddid($dname,99,%entry)) {
+        var %tok $gettok($did($dname,99,$v1),2,32)
+
+        if (%tok == 0) {
+          did -a $dname 5 %string
+        }
+        elseif (%tok == 1) {
+          did -a $dname 5 %string
+          did -s $dname 5 $did(5).lines
+        }
+      }
+      else {
+        did -a $dname 5 %string 
+        did -l $dname 5 $did(5).lines
+      }
+    }
+    inc %i
+  }
+}
