@@ -11,27 +11,19 @@ group=Extras
 popup=RSS
 author=acvxqs
 version=1.0
-url=
-email=
+url=https://github.com/peace-and-protection/PnPAddons422
 id=pprss
 ppver=4.22
 config=rss
-help=
 unload=_rss.unload
-vars=
 vars2=rss.on rss.interval
 windows=@RSS[*
 dialogs=pprss
 timers=.pprss.check
-sockets=
-hashcid=
-hashpnp=
 [files]
 1=rss.ppa
 [notes]
-1=
-[menu]
-1=
+1=This addon manages and views RSS feeds.
 #.ppa.info end
 
 on *:LOAD:{
@@ -51,6 +43,11 @@ on *:LOAD:{
   `set rss.on 0
   `set rss.interval 60
   _rssw.entries
+}
+on *:START:{ 
+  if (($hget(pnp.config,rss.on)) && ($hget(pnp.config,rss.interval) isnum 1-9999)) { 
+    if (!$timer(.pprss.check)) .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | .timer.pprss.check -e
+  }
 }
 alias _rss.unload {
   if ($hget(pnp.rss.done)) hfree $v1
@@ -102,9 +99,6 @@ alias -l _rssw.entries {
   ; XKCD.com
   writeini $scriptdirrss.ini RSS https://xkcd.com/rss.xml $_s2f($+(Main Page,$chr(1),XKCD)) 
 }
-; URLGET RSS FEED -> COM XML (MSXML)   [x]
-; COM XML         -> PARSE DATA        [ ]
-; PARSE DATA      -> NEWSTICKER WINDOW [ ]
 alias rss {
   if (($1 == on) || ($1 == on)) {
     `set rss.on 1 
@@ -222,7 +216,6 @@ alias -l _rssd.ok {
 on *:DIALOG:pprss:init:0:{
   did $iif($hget(pnp.config,rss.on),-c,-u) $dname 1
   did -a $dname 3 $hget(pnp.config,rss.interval)
-  ; load all enabled entries first in hidden listbox
   var %i 1
   while ($ini($scriptdirrss.ini,Enabled,%i)) {
     var %url $v1, %data $readini($scriptdirrss.ini,n,Enabled,%url), %name $gettok(%data,1,1), %group $gettok(%data,2,1)
@@ -261,11 +254,8 @@ on *:DIALOG:pprss:sclick:7:{
   var %finddid $_finddid($dname,99,%string)
   if (%finddid) did -o $dname 99 %finddid %newstring $did(5,$did(5).sel).cstate
   else did -a $dname 99 %newstring $did(5,$did(5).sel).cstate
-  ; remove old entry
   remini $scriptdirrss.ini RSS $gettok($did(5,$did(5).sel),3,32)
-  ; write new entry
   writeini $scriptdirrss.ini RSS %newfeed $+(%newname,$chr(1),%group)
-  ; update view
   _rssd.updrss
 }
 
@@ -318,7 +308,6 @@ alias -l _rssd.rssstate {
 }
 on *:DIALOG:pprss:sclick:8:{
   _okcancel 1 Remove ' $+ $did(5,$did(5).sel) $+ '?
-  ; flag it for removal
   var %string $replace($+($did(5,$did(5).sel),$chr(1),$did(10)),$chr(32),$chr(1))
   var %finddid $_finddid($dname,99,%string)
   if (%finddid) did -o $dname 99 %finddid $+(%string,$chr(32),R)
