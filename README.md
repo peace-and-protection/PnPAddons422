@@ -30,4 +30,4 @@ Adds the default slap! to mIRC + PnP.
 Queries system information and returns results.
 
 ## WEATHER.PPA
-Queries weather information from OpenWeatherMap and returns results.
+Queries weather information from OpenWeatherMap and returns results. Note: You need an API key from OpenWeatherMap.org!
