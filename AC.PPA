@@ -73,7 +73,7 @@ alias -l ppac.scan {
     if ($dialog(ppac)) { dialog -t ppac Please wait...scanning $remove(%afile,$mircdir) }
 
     hmake pnp.ac.scanfile 100
-    hload -n pnp.ac.scanfile $alias(%num)
+    hload -n pnp.ac.scanfile " $+ $alias(%num) $+ "
 
     var %x = 1,%i = $hget(pnp.ac.scanfile,0).item
     while (%x <= %i) {
