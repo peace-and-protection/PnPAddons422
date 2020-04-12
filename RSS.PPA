@@ -152,7 +152,10 @@ alias _rssget {
               while (%child <= %children) {
                 if (!$hget(pnp.rss.done,$sha1($comval(%com3,%child,xml)))) {
                   hadd -m pnp.rss.done $sha1($comval(%com3,%child,xml)) 1
-                  if ($comval(%com3,%child,tagName) == title) $iif($2,$2-,echo -ag) $asctime($timestampfmt) $:b($_cap1st($comval(%com3,%child,tagName))) : $comval(%com3,%child,text)
+                  if ($comval(%com3,%child,tagName) == title) { 
+                    $iif($2,$2-,echo -ag) $::: 
+                    $iif($2,$2-,echo -ag) $asctime($timestampfmt) $:b($_cap1st($comval(%com3,%child,tagName))) : $comval(%com3,%child,text)
+                  }
                   elseif ($comval(%com3,%child,tagName) == link) $iif($2,$2-,echo -ag) $asctime($timestampfmt) $:b($_cap1st($comval(%com3,%child,tagName))) : $comval(%com3,%child,text)                
                   elseif ($comval(%com3,%child,tagName) == description) $iif($2,$2-,echo -ag) $asctime($timestampfmt) $:b($_cap1st($comval(%com3,%child,tagName))) : $_rss.shorten(500,$comval(%com3,%child,text))
                   elseif ($comval(%com3,%child,tagName) == pubDate) $iif($2,$2-,echo -ag) $asctime($timestampfmt) $:b($_cap1st($comval(%com3,%child,tagName))) : $comval(%com3,%child,text)
