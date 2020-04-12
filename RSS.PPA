@@ -10,7 +10,7 @@ name=RSS
 group=Extras
 popup=RSS
 author=acvxqs
-version=1.2
+version=1.3
 url=https://github.com/peace-and-protection/PnPAddons422
 id=pprss
 ppver=4.22
@@ -281,15 +281,12 @@ on *:DIALOG:pprss:sclick:12:{
     elseif ((!%enabled) && (%state == R)) {
       remini $qt($scriptdirrss.ini) RSS %url
     }
-    elseif ((!%enabled) && (%state == 1)) {
+    elseif ((!%enabled) && (%state == 1) && (%rss.on.new)) {
       var %data $+(%name,$chr(1),%group)
       writeini -n $qt($scriptdirrss.ini) Enabled %url %data
       tokenize 1 %data
       var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
       if (!$window(%win)) _window 2 -n %win -1 -1 -1 -1
-      aline %win $asctime($timestampfmt) $:::
-      aline %win $asctime($timestampfmt) Polling for news...
-      aline %win $asctime($timestampfmt) $:::
       _rssget %url aline %win
     }
     inc %i
