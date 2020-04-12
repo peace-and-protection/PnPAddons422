@@ -45,8 +45,8 @@ on *:LOAD:{
   _rssw.entries
 }
 on *:START:{ 
-  if (($hget(pnp.config,rss.on)) && ($hget(pnp.config,rss.interval) isnum 1-9999)) { 
-    if (!$timer(.pprss.check)) .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | .timer.pprss.check -e
+  if (($hget(pnp.config,rss.on)) && ($hget(pnp.config,rss.interval) isnum 1-9999) && ($ini($qt($scriptdirrss.ini),enabled,0))) { 
+    .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | .timer.pprss.check -e
   }
 }
 alias _rss.unload {
@@ -101,8 +101,10 @@ alias -l _rssw.entries {
 }
 alias rss {
   if (($1 == on) || ($1 == on)) {
-    `set rss.on 1 
-    .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | .timer.pprss.check -e
+    if ($ini($qt($scriptdirrss.ini),enabled,0)) {
+      `set rss.on 1 
+      .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | .timer.pprss.check -e
+    }
   }
   elseif (($1 == off) || ($1 == off)) {
     `set rss.on 0
@@ -114,7 +116,7 @@ alias rss {
     _dialog -am pprss pprss
     return
   }
-  dispa RSS is $:t($_tf2o($hget(pnp.config,rss.on)))
+  dispa RSS is $:t($_tf2o($hget(pnp.config,rss.on))) - Please enable some feeds!
 }
 alias rsspull if ($timer(.pprss.check)) .timer.pprss.check -e
 alias -l _rss.checkfeeds {
