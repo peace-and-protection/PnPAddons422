@@ -10,7 +10,7 @@ name=RSS
 group=Extras
 popup=RSS
 author=acvxqs
-version=1.0
+version=1.1
 url=https://github.com/peace-and-protection/PnPAddons422
 id=pprss
 ppver=4.22
@@ -102,12 +102,12 @@ alias -l _rssw.entries {
 alias rss {
   if (($1 == on) || ($1 == on)) {
     `set rss.on 1 
-    if (!$timer(.pprss.check)) .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | .timer.pprss.check -e
+    .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | .timer.pprss.check -e
   }
   elseif (($1 == off) || ($1 == off)) {
     `set rss.on 0
     if ($hget(pnp.rss.done)) hfree pnp.rss.done
-    if ($timer(.pprss.check)) .timer.pprss.check off
+    .timer.pprss.check off
     close -@RSS[*
   }
   else {
@@ -260,8 +260,11 @@ on *:DIALOG:pprss:sclick:7:{
 }
 
 on *:DIALOG:pprss:sclick:12:{ 
-  `set rss.interval $iif($did(3) isnum 1-9999,$did(3),10)
-  `set rss.on $did(1).state
+  var %rss.interval.old $hget(pnp.config,rss.interval)
+  var %rss.interval.new $iif($did(3) isnum 1-9999,$did(3),60)
+  var %rss.on.old $hget(pnp.config,rss.on)
+  var %rss.on.new $did(1).state
+
   var %i 1, %lines $did(99).lines
   while ($did(99,%i)) {
     var %string $v1, %data $gettok(%string,1,32), %state $gettok(%string,2,32)
@@ -283,8 +286,34 @@ on *:DIALOG:pprss:sclick:12:{
     }
     inc %i
   }
-  if (($hget(pnp.config,rss.on)) && (!$timer(.pprss.check))) .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | timer.pprss.check -e
-  elseif ((!$hget(pnp.config,rss.on)) && ($timer(.pprss.check))) .timer.pprss.check off
+  ; turned on
+  if (%rss.on.new > %rss.on.old) {
+
+    .timer.pprss.check -io 0 $calc(%rss.interval.new *60) _rss.checkfeeds | timer.pprss.check -e
+  }
+  ; turned off
+  elseif (%rss.on.new < %rss.on.old) {
+    .timer.pprss.check off
+  }
+  ; no change in RSS enabled state
+  else {
+    ; interval has changed
+    if (%rss.interval.new !== %rss.interval.old) {
+      if ($timer(.pprss.check)) {
+        var %new_interval_in_secs $calc(%rss.interval.new *60)
+        var %old_interval_in_secs $calc(%rss.interval.old *60)
+        var %difference_between_old_value__and_time_left $calc(%old_interval_in_secs - $timer(.pprss.check).secs)
+        if (%difference_between_old_value__and_time_left >= %new_interval_in_secs) {
+          .timer.pprss.check -io 0 %new_interval_in_secs _rss.checkfeeds | .timer.pprss.check -e
+        }
+        else { 
+          .timer.pprss.check -io 0 %new_interval_in_secs _rss.checkfeeds
+        }
+      }
+    }
+  }
+  `set rss.interval %rss.interval.new
+  `set rss.on %rss.on.new
 }
 alias -l _rssd.rssstate {
   var %rssstate $did(5,$did(5).sel).cstate, %string $replace($+($did(5,$did(5).sel),$chr(1),$did(10)),$chr(32),$chr(1))
