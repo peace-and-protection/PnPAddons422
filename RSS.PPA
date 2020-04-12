@@ -254,7 +254,7 @@ on *:DIALOG:pprss:sclick:7:{
   var %finddid $_finddid($dname,99,%string)
   if (%finddid) did -o $dname 99 %finddid %newstring $did(5,$did(5).sel).cstate
   else did -a $dname 99 %newstring $did(5,$did(5).sel).cstate
-  remini $scriptdirrss.ini RSS $gettok($did(5,$did(5).sel),3,32)
+  remini $qt($scriptdirrss.ini) RSS $gettok($did(5,$did(5).sel),3,32)
   writeini -n $qt($scriptdirrss.ini) RSS %newfeed $+(%newname,$chr(1),%group)
   _rssd.updrss
 }
@@ -272,14 +272,14 @@ on *:DIALOG:pprss:sclick:12:{
     var %enabled $readini($scriptdirrss.ini,n,Enabled,%url)
 
     if ((%enabled) && (%state == R)) { 
-      remini $scriptdirrss.ini Enabled %url
-      remini $scriptdirrss.ini RSS %url
+      remini $qt($scriptdirrss.ini) Enabled %url
+      remini $qt($scriptdirrss.ini) RSS %url
     }
     elseif ((%enabled) && (%state == 0)) {
-      remini $scriptdirrss.ini Enabled %url
+      remini $qt($scriptdirrss.ini) Enabled %url
     }
     elseif ((!%enabled) && (%state == R)) {
-      remini $scriptdirrss.ini RSS %url
+      remini $qt($scriptdirrss.ini) RSS %url
     }
     elseif ((!%enabled) && (%state == 1)) {
       var %data $+(%name,$chr(1),%group)
