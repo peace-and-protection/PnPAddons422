@@ -10,7 +10,7 @@ name=RSS
 group=Extras
 popup=RSS
 author=acvxqs
-version=1.3
+version=1.4
 url=https://github.com/peace-and-protection/PnPAddons422
 id=pprss
 ppver=4.22
@@ -138,37 +138,41 @@ alias _rssget {
     .comopen %com MSXML2.DOMDocument.6.0
     if ((!$com(%com)) || ($comerr)) %error = Unable to create an instance of MSXML2.DOMDocument.6.0
     elseif ((!$com(%com, async, 4, bool, false)) || ($comerr)) %error = Unable to set async property
-    elseif ((!$com(%com, load, 1, bstr*, %url)) || ($comerr)) %error = Unable to load XML from: %url
+    elseif ((!$com(%com, load, 1, bstr*, %url)) || ($comerr)) %error = Unable to load XML from: ' $+ %url $+ '
     elseif ((!$com(%com, selectnodes, 1, bstr*, /rss/channel/item, dispatch* %itemcol)) || ($comerr)) %error = Unable to select nodes /rss/channel/item
     else {
-      var %items $comval(%itemcol,0), %item 1
+      var %item 0, %items $comval(%itemcol,0)
       if (%items) {
-        while (%item <= %items) {
-          if ((!$com(%itemcol, item, 1, uint, %item, dispatch* %com2)) || ($comerr)) %error = Cannot dispatch XML for individual item to new object
+        while ($com(%itemcol, item, 1, uint, %item, dispatch* %com2)) {
           if ($com(%com2)) {
-            .comclose %com2 $com(%com2, childnodes, 3, dispatch* %com3) 
-            if ($com(%com3)) {
-              var %children $comval(%com3,0), %child 1
-              while (%child <= %children) {
-                if (!$hget(pnp.rss.done,$sha1($comval(%com3,%child,xml)))) {
-                  hadd -m pnp.rss.done $sha1($comval(%com3,%child,xml)) 1
-                  if ($comval(%com3,%child,tagName) == title) { 
-                    $iif($2,$2-,echo -ag) $::: 
-                    $iif($2,$2-,echo -ag) $asctime($timestampfmt) $:b($_cap1st($comval(%com3,%child,tagName))) : $comval(%com3,%child,text)
+
+            if ((!$com(%com2, xml, 3)) || ($comerr)) %error = Cannot get xml from individual item
+            if ((!$com(%com2, childnodes, 3, dispatch* %com3)) || ($comerr)) %error = Cannot get childnodes from individual /item
+
+            var %xml $com(%com2).result, %sha1 $sha1(%xml)
+            .comclose %com2
+            if (!$hget(pnp.rss.done,%sha1)) {
+              hadd -m pnp.rss.done %sha 1
+              if ($com(%com3)) {
+                var %children $comval(%com3,0), %child 1
+                if (%children) {
+                  while (%child <= %children) {
+                    var %tagname $comval(%com3,%child,tagName)
+                    if (%child == 1) $iif($2,$2-,echo -stg) $:::
+                    if ($istok(title link description pubDate,%tagname,32)) $iif($2,$2-,echo -sg) $asctime($timestampfmt) $:b($_cap1st(%tagname)) : $comval(%com3,%child,text)
+                    inc %child
                   }
-                  elseif ($comval(%com3,%child,tagName) == link) $iif($2,$2-,echo -ag) $asctime($timestampfmt) $:b($_cap1st($comval(%com3,%child,tagName))) : $comval(%com3,%child,text)                
-                  elseif ($comval(%com3,%child,tagName) == description) $iif($2,$2-,echo -ag) $asctime($timestampfmt) $:b($_cap1st($comval(%com3,%child,tagName))) : $_rss.shorten(500,$comval(%com3,%child,text))
-                  elseif ($comval(%com3,%child,tagName) == pubDate) $iif($2,$2-,echo -ag) $asctime($timestampfmt) $:b($_cap1st($comval(%com3,%child,tagName))) : $comval(%com3,%child,text)
                 }
-                inc %child
+                else %error = No child nodes found for individual item!
               }
-              .comclose %com3
             }
+            .comclose %com3
           }
+          else break
           inc %item
         }
       }
-      else %error = No news items found for URL: ' $+ %url $+ '.
+      else %error = No items found for url ' $+ %url $+ '
     }
   }
   ; Handle errors
@@ -281,13 +285,15 @@ on *:DIALOG:pprss:sclick:12:{
     elseif ((!%enabled) && (%state == R)) {
       remini $qt($scriptdirrss.ini) RSS %url
     }
-    elseif ((!%enabled) && (%state == 1) && (%rss.on.new)) {
+    elseif ((!%enabled) && (%state == 1)) {
       var %data $+(%name,$chr(1),%group)
       writeini -n $qt($scriptdirrss.ini) Enabled %url %data
-      tokenize 1 %data
-      var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
-      if (!$window(%win)) _window 2 -n %win -1 -1 -1 -1
-      _rssget %url aline %win
+      if (%rss.on.new) {
+        tokenize 1 %data
+        var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
+        if (!$window(%win)) _window 2 -n %win -1 -1 -1 -1
+        _rssget %url aline %win
+      }
     }
     inc %i
   }
