@@ -10,7 +10,7 @@ name=RSS
 group=Extras
 popup=RSS
 author=acvxqs
-version=1.4
+version=1.5
 url=https://github.com/peace-and-protection/PnPAddons422
 id=pprss
 ppver=4.22
@@ -116,7 +116,7 @@ alias rss {
     _dialog -am pprss pprss
     return
   }
-  dispa RSS is $:t($_tf2o($hget(pnp.config,rss.on))) - Please enable some feeds!
+  dispa RSS is $:t($_tf2o($hget(pnp.config,rss.on)))
 }
 alias rsspull if ($timer(.pprss.check)) .timer.pprss.check -e
 alias -l _rss.checkfeeds {
