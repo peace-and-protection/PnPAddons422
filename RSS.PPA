@@ -124,9 +124,6 @@ alias -l _rss.checkfeeds {
     tokenize 1 %data
     var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
     if (!$window(%win)) _window 2 -n %win -1 -1 -1 -1
-    aline %win $asctime($timestampfmt) $:::
-    aline %win $asctime($timestampfmt) Polling for news...
-    aline %win $asctime($timestampfmt) $:::
     _rssget %url aline %win 
     inc %i
   }
