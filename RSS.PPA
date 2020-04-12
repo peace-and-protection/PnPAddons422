@@ -57,47 +57,47 @@ alias _rss.unload {
 alias -l _rssw.entries {
   _okcancel 1 Do you want to load default RSS feeds?
   ; De Volkskrant
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/voorpagina/rss.xml $_s2f($+(Voorpagina,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/nieuws-achtergrond/rss.xml $_s2f($+(Nieuws & Achtergrond,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/columns-opinie/rss.xml $_s2f($+(Columns & Opinie,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/podcasts/rss.xml $_s2f($+(Podcasts,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/uitgelicht/rss.xml $_s2f($+(Uitgelicht,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/wetenschap/rss.xml $_s2f($+(Wetenschap,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/mensen/rss.xml $_s2f($+(Mensen,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/de-gids/rss.xml $_s2f($+(De Gids,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/reizen/rss.xml $_s2f($+(Reizen,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/opvoeden/rss.xml $_s2f($+(Opvoeden,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/eten-en-drinken/rss.xml $_s2f($+(Eten en Drinken,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/kijken/rss.xml $_s2f($+(Kijken,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/werken/rss.xml $_s2f($+(Werken,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/cultuur-media/rss.xml $_s2f($+(Cultuur & Media,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/foto/rss.xml $_s2f($+(Foto,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/economie/rss.xml $_s2f($+(Economie,$chr(1),de Volkskrant))
-  writeini $scriptdirrss.ini RSS https://www.volkskrant.nl/sport/rss.xml $_s2f($+(Sport,$chr(1),de Volkskrant)) 
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/voorpagina/rss.xml $_s2f($+(Voorpagina,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/nieuws-achtergrond/rss.xml $_s2f($+(Nieuws & Achtergrond,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/columns-opinie/rss.xml $_s2f($+(Columns & Opinie,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/podcasts/rss.xml $_s2f($+(Podcasts,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/uitgelicht/rss.xml $_s2f($+(Uitgelicht,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/wetenschap/rss.xml $_s2f($+(Wetenschap,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/mensen/rss.xml $_s2f($+(Mensen,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/de-gids/rss.xml $_s2f($+(De Gids,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/reizen/rss.xml $_s2f($+(Reizen,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/opvoeden/rss.xml $_s2f($+(Opvoeden,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/eten-en-drinken/rss.xml $_s2f($+(Eten en Drinken,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/kijken/rss.xml $_s2f($+(Kijken,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/werken/rss.xml $_s2f($+(Werken,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/cultuur-media/rss.xml $_s2f($+(Cultuur & Media,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/foto/rss.xml $_s2f($+(Foto,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/economie/rss.xml $_s2f($+(Economie,$chr(1),de Volkskrant))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.volkskrant.nl/sport/rss.xml $_s2f($+(Sport,$chr(1),de Volkskrant)) 
   ; The New York Times
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml $_s2f($+(Home Page (U.S.),$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/World.xml $_s2f($+(World,$chr(1),NYTimes)) 
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Africa.xml $_s2f($+(Africa,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Americas.xml $_s2f($+(Americas,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/AsiaPacific.xml $_s2f($+(Asia Pacific,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Europe.xml $_s2f($+(Europe,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/MiddleEast.xml $_s2f($+(Middle East,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Education.xml $_s2f($+(Education,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml $_s2f($+(Politics,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml $_s2f($+(Economy,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml $_s2f($+(Technology,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml $_s2f($+(Sports,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Science.xml $_s2f($+(Science,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Climate.xml $_s2f($+(Climate,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://www.nytimes.com/services/xml/rss/nyt/Health.xml $_s2f($+(Health,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/ArtandDesign.xml $_s2f($+(Art & Design,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Music.xml $_s2f($+(Music,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Movies.xml $_s2f($+(Movies,$chr(1),NYTimes))
-  writeini $scriptdirrss.ini RSS https://rss.nytimes.com/services/xml/rss/nyt/Television.xml $_s2f($+(Television,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml $_s2f($+(Home Page (U.S.),$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/World.xml $_s2f($+(World,$chr(1),NYTimes)) 
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/Africa.xml $_s2f($+(Africa,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/Americas.xml $_s2f($+(Americas,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/AsiaPacific.xml $_s2f($+(Asia Pacific,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/Europe.xml $_s2f($+(Europe,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/MiddleEast.xml $_s2f($+(Middle East,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/Education.xml $_s2f($+(Education,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml $_s2f($+(Politics,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml $_s2f($+(Economy,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml $_s2f($+(Technology,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml $_s2f($+(Sports,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/Science.xml $_s2f($+(Science,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/Climate.xml $_s2f($+(Climate,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://www.nytimes.com/services/xml/rss/nyt/Health.xml $_s2f($+(Health,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/ArtandDesign.xml $_s2f($+(Art & Design,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/Music.xml $_s2f($+(Music,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/Movies.xml $_s2f($+(Movies,$chr(1),NYTimes))
+  writeini -n $qt($scriptdirrss.ini) RSS https://rss.nytimes.com/services/xml/rss/nyt/Television.xml $_s2f($+(Television,$chr(1),NYTimes))
   ; Ars Technica
-  writeini $scriptdirrss.ini RSS https://arstechnica.com/feed/ $_s2f($+(Main Page,$chr(1),Ars Technica)) 
+  writeini -n $qt($scriptdirrss.ini) RSS https://arstechnica.com/feed/ $_s2f($+(Main Page,$chr(1),Ars Technica)) 
   ; XKCD.com
-  writeini $scriptdirrss.ini RSS https://xkcd.com/rss.xml $_s2f($+(Main Page,$chr(1),XKCD)) 
+  writeini -n $qt($scriptdirrss.ini) RSS https://xkcd.com/rss.xml $_s2f($+(Main Page,$chr(1),XKCD)) 
 }
 alias rss {
   if (($1 == on) || ($1 == on)) {
@@ -240,7 +240,7 @@ on *:DIALOG:pprss:sclick:6:{
   if (%group == (Make a new group)) %group = $_s2f($_entry(0,$null,Please enter the name of the group:))
   var %name $_s2f($_entry(0,$null,Please enter the name of the feed:))
   var %url $_entry(-1,$null,Please enter the url of the feed:)
-  writeini $scriptdirrss.ini RSS %url $+(%name,$chr(1),%group)
+  writeini -n $qt($scriptdirrss.ini) RSS %url $+(%name,$chr(1),%group)
   _rssd.updcat
   _rssd.updrss
 }
@@ -255,7 +255,7 @@ on *:DIALOG:pprss:sclick:7:{
   if (%finddid) did -o $dname 99 %finddid %newstring $did(5,$did(5).sel).cstate
   else did -a $dname 99 %newstring $did(5,$did(5).sel).cstate
   remini $scriptdirrss.ini RSS $gettok($did(5,$did(5).sel),3,32)
-  writeini $scriptdirrss.ini RSS %newfeed $+(%newname,$chr(1),%group)
+  writeini -n $qt($scriptdirrss.ini) RSS %newfeed $+(%newname,$chr(1),%group)
   _rssd.updrss
 }
 
@@ -283,7 +283,7 @@ on *:DIALOG:pprss:sclick:12:{
     }
     elseif ((!%enabled) && (%state == 1)) {
       var %data $+(%name,$chr(1),%group)
-      writeini $scriptdirrss.ini Enabled %url %data
+      writeini -n $qt($scriptdirrss.ini) Enabled %url %data
       tokenize 1 %data
       var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
       if (!$window(%win)) _window 2 -n %win -1 -1 -1 -1
