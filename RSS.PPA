@@ -409,3 +409,6 @@ alias -l _rssd.updrss {
     inc %i
   }
 }
+menu @RSS {
+  Configure:rss
+}
