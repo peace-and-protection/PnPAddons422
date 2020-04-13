@@ -161,12 +161,12 @@ alias _rssget {
           if ($com(%com2)) {
 
             if ((!$com(%com2, xml, 3)) || ($comerr)) %error = Cannot get xml from individual item
+            var %xml $com(%com2).result, %sha1 $sha1(%xml)
             if ((!$com(%com2, childnodes, 3, dispatch* %com3)) || ($comerr)) %error = Cannot get childnodes from individual /item
 
-            var %xml $com(%com2).result, %sha1 $sha1(%xml)
             .comclose %com2
             if (!$hget(pnp.rss.done,%sha1)) {
-              hadd -m pnp.rss.done %sha 1
+              hadd -m pnp.rss.done %sha1 1
               if ($com(%com3)) {
                 var %children $comval(%com3,0), %child 1
                 if (%children) {
