@@ -10,7 +10,7 @@ name=RSS
 group=Extras
 popup=RSS
 author=acvxqs
-version=1.5
+version=1.6
 url=https://github.com/peace-and-protection/PnPAddons422
 id=pprss
 ppver=4.22
@@ -45,8 +45,12 @@ on *:LOAD:{
   _rssw.entries
 }
 on *:START:{ 
-  if (($hget(pnp.config,rss.on)) && ($hget(pnp.config,rss.interval) isnum 1-9999) && ($ini($qt($scriptdirrss.ini),enabled,0))) { 
-    .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | .timer.pprss.check -e
+  _startup.add _pprss.start Initializing RSS addon
+}
+alias _pprss.start {
+  var %rss.on $hget(pnp.config,rss.on), %rss.interval $hget(pnp.config,rss.interval), %rss.enabledfeeds $ini($qt($scriptdirrss.ini),enabled,0)
+  if ((%rss.on) && (%rss.interval isnum 1-9999) && (%rss.enabledfeeds)) {
+    .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | .timer.pprss.check -e 
   }
 }
 alias _rss.unload {
@@ -103,18 +107,26 @@ alias rss {
   if (($1 == on) || ($1 == on)) {
     if ($ini($qt($scriptdirrss.ini),enabled,0)) {
       `set rss.on 1 
-      .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | .timer.pprss.check -e
+    }
+    else { 
+      dispa No RSS feeds enabled!
+      `set rss.on 0
     }
   }
   elseif (($1 == off) || ($1 == off)) {
     `set rss.on 0
-    if ($hget(pnp.rss.done)) hfree pnp.rss.done
-    .timer.pprss.check off
-    close -@RSS[*
   }
   else {
     _dialog -am pprss pprss
     return
+  }
+  if ($hget(pnp.config,rss.on)) {
+    .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | .timer.pprss.check -e
+  }
+  else {
+    if ($hget(pnp.rss.done)) hfree pnp.rss.done
+    .timer.pprss.check off
+    close -@RSS[*
   }
   dispa RSS is $:t($_tf2o($hget(pnp.config,rss.on)))
 }
@@ -125,7 +137,7 @@ alias -l _rss.checkfeeds {
     var %url $v1, %data $readini($qt($scriptdirrss.ini),n,Enabled,%url)
     tokenize 1 %data
     var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
-    if (!$window(%win)) _window 2 -n %win -1 -1 -1 -1
+    if (!$window(%win)) _window 2 -n + %win -1 -1 -1 -1 @RSS
     _rssget %url aline %win 
     inc %i
   }
@@ -160,7 +172,7 @@ alias _rssget {
                 if (%children) {
                   while (%child <= %children) {
                     var %tagname $comval(%com3,%child,tagName)
-                    if (%child == 1) $iif($2,$2-,echo -stg) $:::
+                    if (%child == 1) $iif($2,$2-,echo -sg) $asctime($timestampfmt) $:::
                     if ($istok(title link description pubDate,%tagname,32)) $iif($2,$2-,echo -sg) $asctime($timestampfmt) $:b($_cap1st(%tagname)) : $comval(%com3,%child,text)
                     inc %child
                   }
@@ -293,7 +305,7 @@ on *:DIALOG:pprss:sclick:12:{
       if (%rss.on.new) {
         tokenize 1 %data
         var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
-        if (!$window(%win)) _window 2 -n %win -1 -1 -1 -1
+        if (!$window(%win)) _window 2 -n + %win -1 -1 -1 -1 @RSS
         _rssget %url aline %win
       }
     }
@@ -318,8 +330,8 @@ on *:DIALOG:pprss:sclick:12:{
       if ($timer(.pprss.check)) {
         var %new_interval_in_secs $calc(%rss.interval.new *60)
         var %old_interval_in_secs $calc(%rss.interval.old *60)
-        var %difference_between_old_value__and_time_left $calc(%old_interval_in_secs - $timer(.pprss.check).secs)
-        if (%difference_between_old_value__and_time_left >= %new_interval_in_secs) {
+        var %difference_between_old_value_and_time_left $calc(%old_interval_in_secs - $timer(.pprss.check).secs)
+        if (%difference_between_old_value_and_time_left >= %new_interval_in_secs) {
           .timer.pprss.check -io 0 %new_interval_in_secs _rss.checkfeeds | .timer.pprss.check -e
         }
         else { 
