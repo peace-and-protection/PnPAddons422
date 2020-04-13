@@ -137,7 +137,7 @@ alias -l _rss.checkfeeds {
     var %url $v1, %data $readini($qt($scriptdirrss.ini),n,Enabled,%url)
     tokenize 1 %data
     var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
-    if (!$window(%win)) _window 2 -n + %win -1 -1 -1 -1 @RSS
+    if (!$window(%win)) _window 2 -ng1 + %win -1 -1 -1 -1 @RSS
     _rssget %url aline %win 
     inc %i
   }
@@ -305,7 +305,7 @@ on *:DIALOG:pprss:sclick:12:{
       if (%rss.on.new) {
         tokenize 1 %data
         var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
-        if (!$window(%win)) _window 2 -n + %win -1 -1 -1 -1 @RSS
+        if (!$window(%win)) _window 2 -ng1 + %win -1 -1 -1 -1 @RSS
         _rssget %url aline %win
       }
     }
@@ -322,6 +322,7 @@ on *:DIALOG:pprss:sclick:12:{
   ; turned off
   elseif (%rss.on.new < %rss.on.old) {
     .timer.pprss.check off
+    close -@RSS[*
   }
   ; no change in RSS enabled state
   else {
