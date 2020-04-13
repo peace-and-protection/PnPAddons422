@@ -10,7 +10,7 @@ name=RSS
 group=Extras
 popup=RSS
 author=acvxqs
-version=1.6
+version=1.7
 url=https://github.com/peace-and-protection/PnPAddons422
 id=pprss
 ppver=4.22
@@ -137,8 +137,8 @@ alias -l _rss.checkfeeds {
     var %url $v1, %data $readini($qt($scriptdirrss.ini),n,Enabled,%url)
     tokenize 1 %data
     var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
-    if (!$window(%win)) _window 2 -mng1w2 + %win -1 -1 -1 -1 @RSS
-    _rssget %url aline %win 
+    if (!$window(%win)) _window 2 -w2mn + %win -1 -1 -1 -1 @RSS
+    _rssget %url %win 
     inc %i
   }
 }
@@ -170,10 +170,11 @@ alias _rssget {
               if ($com(%com3)) {
                 var %children $comval(%com3,0), %child 1
                 if (%children) {
+                  if ($window($2)) window -g1 $2
                   while (%child <= %children) {
                     var %tagname $comval(%com3,%child,tagName)
-                    if (%child == 1) $iif($2,$2-,echo -sg) $asctime($timestampfmt) $:::
-                    if ($istok(title link description pubDate,%tagname,32)) $iif($2,$2-,echo -sg) $asctime($timestampfmt) $:b($_cap1st(%tagname)) : $comval(%com3,%child,text)
+                    if (%child == 1) $iif($window($2),aline $2,echo -sg) $asctime($timestampfmt) $:::
+                    if ($istok(title link description pubDate,%tagname,32)) $iif($window($2),aline -p $2,echo -sg) $asctime($timestampfmt) $:b($_cap1st(%tagname)) : $comval(%com3,%child,text)
                     inc %child
                   }
                 }
@@ -305,8 +306,8 @@ on *:DIALOG:pprss:sclick:12:{
       if (%rss.on.new) {
         tokenize 1 %data
         var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
-        if (!$window(%win)) _window 2 -mng1w2 + %win -1 -1 -1 -1 @RSS
-        _rssget %url aline %win
+        if (!$window(%win)) _window 2 -w2mn + %win -1 -1 -1 -1 @RSS
+        _rssget %url %win
       }
     }
     inc %i
@@ -321,6 +322,7 @@ on *:DIALOG:pprss:sclick:12:{
   }
   ; turned off
   elseif (%rss.on.new < %rss.on.old) {
+    if ($hget(pnp.rss.done)) hfree pnp.rss.done
     .timer.pprss.check off
     close -@RSS[*
   }
@@ -411,5 +413,7 @@ alias -l _rssd.updrss {
   }
 }
 menu @RSS {
-  Configure:rss
+  Configure...:rss
+  -
+  Pull feed(s) now!:rsspull
 }
