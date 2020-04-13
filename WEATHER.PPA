@@ -10,7 +10,7 @@ name=Weather
 group=Tutorial
 popup=Weather
 author=acvxqs
-version=1.11
+version=1.12
 url=https://github.com/acvxqs/PnPAddons422
 email=
 id=ppweather
@@ -498,14 +498,18 @@ alias weather {
           if ($right($gettok(%netopt,2,44),1) == 0) %switch = k
           elseif ($right($gettok(%netopt,2,44),1) == 1) %switch = m
           elseif ($right($gettok(%netopt,2,44),1) == 2) %switch = i
+          else halt
         }
         elseif ($istok($hget(pnp.weather,$+(anet-,$network,-channels)),$chan,44)) {
           var %chanopt $hget(pnp.weather,$+(achan-,$network,-,$chan))
           if ($right(%chanopt,1) == 0) %switch = k
           elseif ($right(%chanopt,1) == 1) %switch = m
           elseif ($right(%chanopt,1) == 2) %switch = i          
+          else halt
         }
+        else halt
       }
+      else halt
     }
     else %switch = m
     %rest = $1-
@@ -552,8 +556,8 @@ alias weather {
       }
     }
     else {
-      if (%caller == editbox) dispa Usage: /weather {+{m|i|k}} {city},{country code}
-      elseif (%caller == event) msg $chan Usage: $hget(pnp.config,weather.trigger ) {+{m|i|k}} {city},{country code} | msg $chan Example: $hget(pnp.config,weather.trigger) +m Vlissingen,nl
+      if (%caller == editbox) dispa Usage: /weather <+m|i|k> <city>,<country code>
+      elseif (%caller == event) notice $nick Usage: $hget(pnp.config,weather.trigger ) <city>,<country code> | notice $nick Example: $hget(pnp.config,weather.trigger) Vlissingen,nl
     }
   }
   else _dialog -am weather weather 
