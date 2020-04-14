@@ -48,15 +48,15 @@ on *:START:{
   _startup.add _pprss.start Initializing RSS addon
 }
 alias _pprss.start {
-  var %rss.on $hget(pnp.config,rss.on), %rss.interval $hget(pnp.config,rss.interval), %rss.enabledfeeds $ini($qt($scriptdirrss.ini),enabled,0)
+  var %rss.on $hget(pnp.config,rss.on), %rss.interval $hget(pnp.config,rss.interval), %rss.enabledfeeds $ini($scriptdirrss.ini,enabled,0)
   if ((%rss.on) && (%rss.interval isnum 1-9999) && (%rss.enabledfeeds)) {
     .timer.pprss.check -io 0 $calc($hget(pnp.config,rss.interval) *60) _rss.checkfeeds | .timer.pprss.check -e 
   }
 }
 alias _rss.unload {
   if ($hget(pnp.rss.done)) hfree $v1
-  var %file $qt($scriptdirrss.ini)
-  if ($isfile(%file)) .remove %file
+  var %file $scriptdirrss.ini
+  if ($isfile(%file)) .remove $qt(%file)
 }
 alias -l _rssw.entries {
   _okcancel 1 Do you want to load default RSS feeds?
@@ -105,7 +105,7 @@ alias -l _rssw.entries {
 }
 alias rss {
   if (($1 == on) || ($1 == on)) {
-    if ($ini($qt($scriptdirrss.ini),enabled,0)) {
+    if ($ini($scriptdirrss.ini,enabled,0)) {
       `set rss.on 1 
     }
     else { 
@@ -133,8 +133,8 @@ alias rss {
 alias rsspull if ($timer(.pprss.check)) .timer.pprss.check -e
 alias -l _rss.checkfeeds {
   var %i 1
-  while ($ini($qt($scriptdirrss.ini),Enabled,%i)) {
-    var %url $v1, %data $readini($qt($scriptdirrss.ini),n,Enabled,%url)
+  while ($ini($scriptdirrss.ini,Enabled,%i)) {
+    var %url $v1, %data $readini($scriptdirrss.ini,n,Enabled,%url)
     tokenize 1 %data
     var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
     if (!$window(%win)) _window 2 -w2n + %win -1 -1 -1 -1 @RSS
@@ -174,7 +174,7 @@ alias _rssget {
                   while (%child <= %children) {
                     var %tagname $comval(%com3,%child,tagName)
                     if (%child == 1) $iif($window($2),aline $2,echo -sg) $asctime($timestampfmt) $:::
-                    if ($istok(title link description pubDate,%tagname,32)) $iif($window($2),aline -p $2,echo -sg) $asctime($timestampfmt) $:b($_cap1st(%tagname)) : $comval(%com3,%child,text)
+                    if ($istok(title link description pubDate,%tagname,32)) $iif($window($2),aline -p $2,echo -sg) $timestamp $:b($_cap1st(%tagname)) : $comval(%com3,%child,text)
                     inc %child
                   }
                 }
@@ -236,8 +236,8 @@ on *:DIALOG:pprss:init:0:{
   did $iif($hget(pnp.config,rss.on),-c,-u) $dname 1
   did -a $dname 3 $hget(pnp.config,rss.interval)
   var %i 1
-  while ($ini($qt($scriptdirrss.ini),Enabled,%i)) {
-    var %url $v1, %data $readini($qt($scriptdirrss.ini),n,Enabled,%url), %name $gettok(%data,1,1), %group $gettok(%data,2,1)
+  while ($ini($scriptdirrss.ini,Enabled,%i)) {
+    var %url $v1, %data $readini($scriptdirrss.ini,n,Enabled,%url), %name $gettok(%data,1,1), %group $gettok(%data,2,1)
     var %string $+(%name,$chr(1),-,$chr(1),%url,$chr(1),%group,$chr(32),1)
     did -a $dname 99 %string
     inc %i
@@ -288,7 +288,7 @@ on *:DIALOG:pprss:sclick:12:{
   while ($did(99,%i)) {
     var %string $v1, %data $gettok(%string,1,32), %state $gettok(%string,2,32)
     var %url $gettok(%data,3,1), %name $gettok(%data,1,1), %group $gettok(%data,4,1)
-    var %enabled $readini($qt($scriptdirrss.ini),n,Enabled,%url)
+    var %enabled $readini($scriptdirrss.ini,n,Enabled,%url)
 
     if ((%enabled) && (%state == R)) { 
       remini $qt($scriptdirrss.ini) Enabled %url
@@ -313,7 +313,7 @@ on *:DIALOG:pprss:sclick:12:{
     inc %i
   }
   ; turn off if no enabled feeds found:
-  if (!$ini($qt($scriptdirrss.ini),enabled,0)) %rss.on.new = 0
+  if (!$ini($scriptdirrss.ini,enabled,0)) %rss.on.new = 0
 
   ; turned on
   if (%rss.on.new > %rss.on.old) {
@@ -377,8 +377,8 @@ on *:DIALOG:pprss:sclick:8:{
 on *:DIALOG:pprss:sclick:10:_rssd.updrss
 alias -l _rssd.updcat {
   var %i 1
-  while ($ini($qt($scriptdirrss.ini),RSS,%i)) {
-    var %url $v1, %data $readini($qt($scriptdirrss.ini),n,RSS,%url)
+  while ($ini($scriptdirrss.ini,RSS,%i)) {
+    var %url $v1, %data $readini($scriptdirrss.ini,n,RSS,%url)
     tokenize 1 %data
     if (!$_scandid($dname,10,$2)) did -a $dname 10 $2
     inc %i
@@ -388,8 +388,8 @@ alias -l _rssd.updrss {
   did -r $dname 5
   did -b $dname 7,8
   var %i 1
-  while ($ini($qt($scriptdirrss.ini),RSS,%i)) {
-    var %url $v1, %data $readini($qt($scriptdirrss.ini),n,RSS,%url)
+  while ($ini($scriptdirrss.ini,RSS,%i)) {
+    var %url $v1, %data $readini($scriptdirrss.ini,n,RSS,%url)
     tokenize 1 %data
     if ($did(10) == $2) {
       var %string $1 - %url, %entry $replace($+(%string,$chr(1),$2),$chr(32),$chr(1))
