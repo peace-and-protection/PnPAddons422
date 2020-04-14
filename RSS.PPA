@@ -10,7 +10,7 @@ name=RSS
 group=Extras
 popup=RSS
 author=acvxqs
-version=1.7
+version=1.8
 url=https://github.com/peace-and-protection/PnPAddons422
 id=pprss
 ppver=4.22
@@ -137,7 +137,7 @@ alias -l _rss.checkfeeds {
     var %url $v1, %data $readini($scriptdirrss.ini,n,Enabled,%url)
     tokenize 1 %data
     var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
-    if (!$window(%win)) _window 2 -w2n + %win -1 -1 -1 -1 @RSS
+    if (!$window(%win)) _window 2 -nm + %win -1 -1 -1 -1 @RSS
     _rssget %url %win 
     inc %i
   }
@@ -306,7 +306,7 @@ on *:DIALOG:pprss:sclick:12:{
       if (%rss.on.new) {
         tokenize 1 %data
         var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
-        if (!$window(%win)) _window 2 -w2n + %win -1 -1 -1 -1 @RSS
+        if (!$window(%win)) _window 2 -nm + %win -1 -1 -1 -1 @RSS
         _rssget %url %win
       }
     }
