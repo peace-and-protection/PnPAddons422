@@ -10,7 +10,7 @@ name=RSS
 group=Extras
 popup=RSS
 author=acvxqs
-version=1.8
+version=1.9
 url=https://github.com/peace-and-protection/PnPAddons422
 id=pprss
 ppver=4.22
@@ -137,7 +137,7 @@ alias -l _rss.checkfeeds {
     var %url $v1, %data $readini($scriptdirrss.ini,n,Enabled,%url)
     tokenize 1 %data
     var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
-    if (!$window(%win)) _window 2 -nm + %win -1 -1 -1 -1 @RSS
+    if (!$window(%win)) _window 2 -niz + %win -1 -1 -1 -1 @RSS
     _rssget %url %win 
     inc %i
   }
@@ -161,27 +161,31 @@ alias _rssget {
           if ($com(%com2)) {
 
             if ((!$com(%com2, xml, 3)) || ($comerr)) %error = Cannot get xml from individual item
-            var %xml $com(%com2).result, %sha1 $sha1(%xml)
-            if ((!$com(%com2, childnodes, 3, dispatch* %com3)) || ($comerr)) %error = Cannot get childnodes from individual /item
+            if ((!$com(%com2,&xml).result) || ($comerr)) %error = Cannot place xml in binvar
+            else {
+              var %sha1 $sha1(&xml,1)
+              bunset &xml
+              if ((!$com(%com2, childnodes, 3, dispatch* %com3)) || ($comerr)) %error = Cannot get childnodes from individual /item
 
-            .comclose %com2
-            if (!$hget(pnp.rss.done,%sha1)) {
-              hadd -m pnp.rss.done %sha1 1
-              if ($com(%com3)) {
-                var %children $comval(%com3,0), %child 1
-                if (%children) {
-                  if ($window($2)) window -g1 $2
-                  while (%child <= %children) {
-                    var %tagname $comval(%com3,%child,tagName)
-                    if (%child == 1) $iif($window($2),aline $2,echo -sg) $timestamp $:::
-                    if ($istok(title link description pubDate,%tagname,32)) $iif($window($2),aline -p $2,echo -sg) $timestamp $:b($_cap1st(%tagname)) : $comval(%com3,%child,text)
-                    inc %child
+              .comclose %com2
+              if (!$hget(pnp.rss.done,%sha1)) {
+                hadd -m pnp.rss.done %sha1 1
+                if ($com(%com3)) {
+                  var %children $comval(%com3,0), %child 1
+                  if (%children) {
+                    if ($window($2)) window -g1 $2
+                    while (%child <= %children) {
+                      var %tagname $comval(%com3,%child,tagName)
+                      if (%child == 1) $iif($window($2),aline $2,echo -sg) $timestamp $:::
+                      if ($istok(title link description pubDate,%tagname,32)) $iif($window($2),aline -p $2,echo -sg) $timestamp $:b($_cap1st(%tagname)) : $comval(%com3,%child,text)
+                      inc %child
+                    }
                   }
+                  else %error = No child nodes found for individual item!
                 }
-                else %error = No child nodes found for individual item!
               }
+              .comclose %com3
             }
-            .comclose %com3
           }
           else break
           inc %item
@@ -306,7 +310,7 @@ on *:DIALOG:pprss:sclick:12:{
       if (%rss.on.new) {
         tokenize 1 %data
         var %win @RSS[ $+ $2 $+ - $+ $1 $+ ]
-        if (!$window(%win)) _window 2 -nm + %win -1 -1 -1 -1 @RSS
+        if (!$window(%win)) _window 2 -niz + %win -1 -1 -1 -1 @RSS
         _rssget %url %win
       }
     }
