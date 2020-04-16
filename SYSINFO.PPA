@@ -76,7 +76,7 @@ alias ppsysinfo {
   _progress.1 Connecting to WMI (COM)...
 
   if ($window(%win)) window -c %win
-  _window 2.2 -hnlkv -t40,120 %win -1 -1 -1 -1 %win
+  _window 2.2 -hnlkv -t40,80 %win -1 -1 -1 -1 %win
   iline %win 1 Systeminformation
 
 
