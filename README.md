@@ -19,6 +19,7 @@ Notifies you with a tooltip when you nickname is mentioned.
 
 ## QW.PPA
 Rough draft of a Q bot for Quakenet addon for PnP.
+It's recommended to load this addon before connecting to Quakenet!
 
 ## RSS.PPA
 A simple RSS feed manager and viewer.
