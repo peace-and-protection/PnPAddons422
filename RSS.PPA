@@ -10,7 +10,7 @@ name=RSS
 group=Extras
 popup=RSS
 author=acvxqs
-version=1.9
+version=1.10
 url=https://github.com/peace-and-protection/PnPAddons422
 id=pprss
 ppver=4.22
@@ -177,7 +177,8 @@ alias _rssget {
                     while (%child <= %children) {
                       var %tagname $comval(%com3,%child,tagName)
                       if (%child == 1) $iif($window($2),aline $2,echo -sg) $timestamp $:::
-                      if ($istok(title link description pubDate,%tagname,32)) $iif($window($2),aline -p $2,echo -sg) $timestamp $:b($_cap1st(%tagname)) : $comval(%com3,%child,text)
+                      if ($istok(title,%tagname,32)) $iif($window($2),aline -p $2,echo -sg) $timestamp $:b($_cap1st(%tagname)) : $iif($hget(pnp.config,rss.boldtitle),$:b($comval(%com3,%child,text)),$comval(%com3,%child,text))
+                      if ($istok(link description pubDate,%tagname,32)) $iif($window($2),aline -p $2,echo -sg) $timestamp $:b($_cap1st(%tagname)) : $comval(%com3,%child,text)
                       inc %child
                     }
                   }
@@ -222,6 +223,7 @@ dialog pprss {
   text "Poll xml feeds every", 2, 5 20 48 8
   edit "", 3, 56 19 20 10
   text "minutes. (10 or more recommended)", 4, 79 20 90 8
+  check "Bold 'Title' text in RSS window", 9, 200 20 90 8
   list 5, 5 50 280 100, size check
   button "Add", 6, 5 155 37 12
   button "Edit", 7, 47 155 37 12, disable
@@ -238,6 +240,7 @@ alias -l _rssd.ok {
 }
 on *:DIALOG:pprss:init:0:{
   did $iif($hget(pnp.config,rss.on),-c,-u) $dname 1
+  did $iif($hget(pnp.config,rss.boldtitle),-c,-u) $dname 9
   did -a $dname 3 $hget(pnp.config,rss.interval)
   var %i 1
   while ($ini($scriptdirrss.ini,Enabled,%i)) {
@@ -281,7 +284,9 @@ on *:DIALOG:pprss:sclick:7:{
   writeini -n $qt($scriptdirrss.ini) RSS %newfeed $+(%newname,$chr(1),%group)
   _rssd.updrss
 }
-
+on *:DIALOG:pprss:sclick:9:{
+  `set rss.boldtitle $did(9).state
+}
 on *:DIALOG:pprss:sclick:12:{ 
   var %rss.interval.old $hget(pnp.config,rss.interval)
   var %rss.interval.new $iif($did(3) isnum 1-9999,$did(3),60)
