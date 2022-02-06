@@ -5,6 +5,10 @@ Clone or download and extract the contents of the zip file to the `\addons` fold
 
 Have fun!
 
+## Contributing
+If you like the idea of a particular addon and want to work on it and improve it, feel free to drop by on #peace&protection on EFNet.
+Let me know -sroelse aka kapot aka acvxqs- Happy to add you to a Github team and give you write permission!
+
 ## AC.PPA
 Scans and returns a list of ALL aliases in $alias(0) and $script(0).
 
