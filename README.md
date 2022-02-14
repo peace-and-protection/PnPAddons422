@@ -7,7 +7,7 @@ Have fun!
 
 ## Contributing
 If you like the idea of a particular addon and want to work on it and improve it, feel free to drop by on #peace&protection on EFNet.
-Let me know -sroelse aka kapot aka acvxqs- Happy to add you to a Github team and give you write permission!
+Let us know and we'll figure out a way and/or help you with Pull Requesting your work into this repository.
 
 ## AC.PPA
 Scans and returns a list of ALL aliases in $alias(0) and $script(0).
